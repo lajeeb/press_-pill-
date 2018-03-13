@@ -1,0 +1,188 @@
+from tkinter import *
+
+
+#first of all we need to create the main class in which we build the controls that will appear on a window
+#Next step is create the containers and their widgets (bottons, boxes, etc)
+class Interface:
+    def __init__(self, master=None):
+
+
+        #Now we create the first and main container (widget 1) called ``choix de la fenetre``
+        #The frame master is the top level, the application window, with titles, bottons, minimize, etc.
+        #pack is a geometric manager
+        #a widget of type ``Label`` is defined and we define the font, size, etc
+        #self.msg.pack will exhibit the message on the window
+        # The second step is create the secondary widgets (like bottons, etc)
+
+# Main Frames Creation
+        self.frameChoixdelafenetre = Frame(master)
+        self.frameChoixdelafenetre = LabelFrame(relief="ridge", border=5)
+        self.frameChoixdelafenetre.pack()
+
+        self.frameglobal = Frame(master)
+        self.frameglobal = LabelFrame(relief="ridge", border=5)
+        self.frameglobal.place(height=564, width=1278.5, x=0, y=100)
+
+        self.frameTempsReel = Frame(master)
+        self.frameTempsReel = LabelFrame(relief="ridge", border=3)
+        # self.widget2.pack(side=LEFT)
+        self.frameTempsReel.place(height=100, width=290, x=5, y=105)
+
+        self.frameParameter = Frame(master)
+        self.frameParameter = LabelFrame(relief="ridge", border=3)
+        # self.frameParameter.pack(side=LEFT)
+        self.frameParameter.place(height=100, width=290, x=5, y=205)
+
+        self.frameChoixdeCourbe = Frame(master)
+        self.frameChoixdeCourbe = LabelFrame(relief="ridge", border=3)
+        # self.frameParameter.pack(side=LEFT)
+        self.frameChoixdeCourbe.place(height=352, width=290, x=5, y=305)
+
+
+
+#Labels and Buttons_Frame Choix de la fenetre
+
+        self.labelChoixdelafenetre = Label(self.frameChoixdelafenetre, text="Choix de la Fenetre")
+        self.labelChoixdelafenetre["font"] = ("Calibri", "15", "italic", "bold")
+        self.labelChoixdelafenetre.grid(row=0, column=0, padx=3, pady=3)
+
+        self.Visualisation = Button(self.frameChoixdelafenetre, text="Visualisation",font="Calibri", width=15, foreground= "white", background="blue",
+                                   command=self.show ,relief=GROOVE) #command = self.changecolor1
+
+        self.Visualisation.grid(row=1,column=0, padx=80, pady=10)
+
+        # if you want to align to the right or left: self.fermer.pack(side=RIGHT)
+
+        self.Controle = Button(self.frameChoixdelafenetre,text="Controle",font="Calibri", width=15,foreground= "white", background= "blue",
+                                command = self.forget, relief=GROOVE)#command = self.changecolor2,
+        self.Controle.grid(row=1,column=1, padx= 80, pady=10)
+
+        self.Etude = Button(self.frameChoixdelafenetre,text="Etude",font="Calibri", width=15,foreground= "white", background= "blue", command = self.changecolor3, relief=GROOVE)
+        self.Etude.grid(row=1,column=2, padx= 80, pady=10)
+
+        self.Etalonage = Button(self.frameChoixdelafenetre, text="Etalonage", font="Calibri", width=15, foreground="white", background="blue",command=self.changecolor4, relief=GROOVE)
+        self.Etalonage.grid(row=1, column=3, padx=80, pady=10)
+
+#creation of frames for visualisation
+
+    def show(self):
+            #self.frameTempsReel.place()  # Retiro todos esses
+            #self.frameParameter.place()  # Retiro todos esses
+            #self.frameChoixdeCourbe.place()  # Retiro todos esses
+
+
+
+
+
+# Labels and Buttons_Frame Temps Reel
+
+        self.Tempsreel = Label(self.frameTempsReel, text="Temps Reél")
+        self.Tempsreel["font"] = ("Calibri", "10", "italic", "bold")
+        self.Tempsreel.grid(row=0, column=0, padx=3, pady=0 )
+
+
+        self.Play = Button(self.frameTempsReel, text="Play", font="Calibri 10", relief=GROOVE)
+        self.Play.grid(row=1, column=0, ipadx=10, ipady=0, padx=12, pady=10)
+        #self.Play.place(x=0, y=10)
+
+        self.Stop = Button(self.frameTempsReel, text="Stop", font="Calibri 10", relief=GROOVE)
+        self.Stop.grid(row=1, column=1, ipadx=10, ipady=0, padx=12, pady=10)
+
+        self.Reset = Button(self.frameTempsReel, text="Reset", font="Calibri 10",relief=GROOVE)
+        self.Reset.grid(row=1, column=2, ipadx=10, ipady=0, padx=12, pady=10)
+
+# Labels and Buttons_Frame Parameter
+
+        self.Parameter = Label(self.frameParameter, text="Parameter")
+        self.Parameter["font"] = ("Calibri", "10", "italic", "bold")
+        self.Parameter.grid(row=0, column=0, padx=3, pady=0)
+
+# Labels and Buttons_Frame Frame Choix de Courbe
+
+        "self.ChoixdeCourbe = Label(self.frameChoixdeCourbe, text="Choix de Courbe")
+        self.ChoixdeCourbe[font"] = ("Calibri", "10", "italic", "bold")
+        self.ChoixdeCourbe.grid(row=0, column=0, padx=3, pady=0)
+
+        #self.sb = Scrollbar(self.frameChoixdeCourbe, orient="vertical")
+        self.text = Text(self.frameChoixdeCourbe, width=5, height=10)#, yscrollcommand=self.sb.set)
+        #self.sb.config(command=self.text.yview)
+        # self.sb.grid(padx=3, pady=0)
+        self.text.grid(row=1, column=0, padx=2, pady=0)
+        #for i in range(2):
+        self.cb1 = Checkbutton(text="ForceH&ForceB/temps", padx=0, pady=0, bd=0)
+        self.text.window_create("end", window=self.cb1)
+        self.text.insert("end", "\n")
+
+        self.cb2 = Checkbutton(text="DepIH&DepIB/temps", padx=0, pady=0, bd=0)
+        self.text.window_create("end", window=self.cb2)
+        self.text.insert("end", "\n")
+
+        self.cb3 = Checkbutton(text="DepIH/temps", padx=0, pady=0, bd=0)
+        self.text.window_create("end", window=self.cb3)
+        self.text.insert("end", "\n")
+
+        self.cb4 = Checkbutton(text="DepIB/temps", padx=0, pady=0, bd=0)
+        self.text.window_create("end", window=self.cb4)
+        self.text.insert("end", "\n")
+
+        self.cb5 = Checkbutton(text="VitDepH/temps", padx=0, pady=0, bd=0)
+        self.text.window_create("end", window=self.cb5)
+        self.text.insert("end", "\n")
+
+        self.cb6 = Checkbutton(text="VitDepB/temps", padx=0, pady=0, bd=0)
+        self.text.window_create("end", window=self.cb6)
+        self.text.insert("end", "\n")
+
+        self.cb7 = Checkbutton(text="Temperature/temps", padx=0, pady=0, bd=0)
+        self.text.window_create("end", window=self.cb7)
+        self.text.insert("end", "\n")
+
+        self.Validation = Button(self.frameChoixdeCourbe, text="Validation", font="Calibri 10", relief=GROOVE)
+        self.Validation.grid(row=1, column=7, ipadx=10, ipady=0, padx=50, pady=10)
+
+    # if you want to align to the right or left: self.fermer.pack(side=RIGHT)
+    def changecolor1(self):
+        if self.Visualisation["background"] == "blue":
+            self.Visualisation["background"] = "green"
+        else:
+            self.Visualisation["background"] = "blue"
+
+    #def changecolor2(self):
+        #if self.Controle["background"] == "blue":
+            #self.Controle["background"] = "green"
+        #else:
+            #self.Controle["background"] = "blue"
+
+
+    def changecolor3(self):
+        if self.Etude["background"] == "blue":
+            self.Etude["background"] = "green"
+        else:
+            self.Etude["background"] = "blue"
+
+
+    def changecolor4(self):
+        if self.Etalonage["background"] == "blue":
+            self.Etalonage["background"] = "green"
+        else:
+            self.Etalonage["background"] = "blue"
+
+
+
+    def forget(self):
+        self.frameTempsReel.place_forget()  # Retiro todos esses
+        self.frameParameter.place_forget()  # Retiro todos esses
+        self.frameChoixdeCourbe.place_forget()  # Retiro todos esses
+
+
+
+
+
+
+root = Tk()
+#root is variable inside class TK
+Interface(root)
+#root now belongs to class Application. It`s a parameter of the class Application
+root.title("GIView")
+root.mainloop()
+#it`s a method that will create the main window ``tk``
