@@ -1,1 +1,2496 @@
 
+from Tkinter import *
+import tkMessageBox as tkM
+import tkFileDialog as fdialog
+import time as t
+import matplotlib.pyplot as plt
+import u12
+import matplotlib.animation as animation
+import random
+import matplotlib.mlab as mlab
+from decimal import *
+import scipy
+import scipy.stats
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import os
+import math as m 
+import cx_Freeze
+
+d = u12.U12()
+
+
+class Interface(Frame): 
+    
+
+
+    def __init__(self, fenetre):
+
+        Frame.__init__(self, fenetre)
+        self.ecranLargeur=fenetre.winfo_screenwidth()
+        self.ecranHauteur=fenetre.winfo_screenheight()
+        self.CreerLabel()
+        self.CreerFrameChoixFenetre()
+        #self.EnregistrementDesDonnees()
+        
+
+### 1. Fenetre de choix
+    
+    def CreerFrameChoixFenetre(self) :
+        
+        self.FrameChoixFenetre  = LabelFrame(fenetre,text="Choix de la fenÃªtre",width=0.95*self.ecranLargeur, height=0.097*self.ecranHauteur
+        ,borderwidth=2, relief=GROOVE)
+        self.FrameChoixFenetre.pack_propagate(FALSE)
+        self.FrameChoixFenetre.place (x=0.02*self.ecranLargeur,y=0.004*self.ecranHauteur)
+        
+        self.CompteurVisualisation=0
+        self.boutonVisualisation = Button(self.FrameChoixFenetre, text="Visualisation", command = lambda : self.CreerFrameVisualisation(), background="red")
+        self.boutonVisualisation.place(x=0.078*self.ecranLargeur, y=0.0195*self.ecranHauteur)
+        self.CompteurControle=0        
+        self.boutonControle = Button(self.FrameChoixFenetre, text="Controle", command = lambda : self.CreerFrameControle(),background="red")
+        self.boutonControle.place(x=0.312*self.ecranLargeur, y=0.0195*self.ecranHauteur)
+        self.CompteurEtude=0        
+        self.boutonEtude = Button(self.FrameChoixFenetre, text="Etude", command = lambda : self.CreerFrameEtude(),background="red")
+        self.boutonEtude.place(x=0.546*self.ecranLargeur, y=0.0195*self.ecranHauteur)
+        self.CompteurEtalonnage=0        
+        self.boutonEtalonnage = Button(self.FrameChoixFenetre, text="Etalonnage", command = lambda : self.CreerFrameEtalonnage(),background="red")
+        self.boutonEtalonnage.place(x=0.78*self.ecranLargeur, y=0.0195*self.ecranHauteur)
+    
+    def CreerLabel(self) :
+        
+        champ_label = Label(fenetre, text="Interface du futur")
+        champ_label.pack() 
+
+### 2. Carte de controle
+
+    def CreerFrameControle (self) :
+        
+        if self.CompteurControle==0 :
+            self.FrameFenetreControle  = LabelFrame(fenetre,text="",width=0.95*self.ecranLargeur, height=0.86*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+            self.FrameFenetreControle.pack_propagate(FALSE)
+            self.FrameFenetreControle.place (x=0.02*self.ecranLargeur,y=0.1*self.ecranHauteur)
+            
+            self.CreerFrameChoixControle()
+            self.CreerFrameControleReglages()
+            self.CreerMatrice()
+            self.CreerExemple() # EXEMPLE A COMMENTER 
+            
+        
+            self.CompteurControle=1
+        else :
+            self.FrameFenetreControle.tkraise()
+            
+        self.boutonVisualisation.configure(background="red")
+        self.boutonControle.configure(background="green")
+        self.boutonEtude.configure(background="red")
+### 2.1 Choix des caractÃ©ristiques / Carte de controle  
+    
+    def CreerFrameChoixControle(self) :
+        
+        self.FrameChoixControle = LabelFrame(self.FrameFenetreControle,text="Choix carte de controle",width =0.23*self.ecranLargeur, height =0.15*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameChoixControle.pack_propagate(FALSE)
+        self.FrameChoixControle.place(x=0.01*self.ecranLargeur, y=0.01*self.ecranHauteur)
+        
+        self.variableMasse = IntVar()
+        self.boutonMasse = Checkbutton(self.FrameChoixControle, text="Masse",variable = self.variableMasse)
+        self.boutonMasse.place(x=0.01*self.ecranLargeur, y=0.01*self.ecranHauteur)
+        
+        self.variableEpaisseur = IntVar()
+        self.boutonEpaisseur = Checkbutton(self.FrameChoixControle, text="Epaisseur",variable = self.variableEpaisseur)
+        self.boutonEpaisseur.place(x=0.01*self.ecranLargeur, y=0.04*self.ecranHauteur)
+        
+        self.variableDurete = IntVar()
+        self.boutonDurete= Checkbutton(self.FrameChoixControle, text="Durete",variable = self.variableDurete)
+        self.boutonDurete.place(x=0.01*self.ecranLargeur, y=0.07*self.ecranHauteur)
+        
+        self.variableDiametre = IntVar()
+        self.boutonDiametre= Checkbutton(self.FrameChoixControle, text="Diametre",variable = self.variableDiametre)
+        self.boutonDiametre.place(x=0.01*self.ecranLargeur, y=0.10*self.ecranHauteur)
+        
+        boutonValidationChoixControle= Button(self.FrameChoixControle, text="Validation", command = lambda : self.ValiderChoixControle())
+        boutonValidationChoixControle.place(x=0.07*self.ecranLargeur, y=0.055*self.ecranHauteur)
+        
+        boutonEnregistrerDonneeControle= Button(self.FrameChoixControle, text="Enregistrer Donnees", command = lambda : self.EnregistrerDonneeControleToute(),state=NORMAL)
+        boutonEnregistrerDonneeControle.place(x=0.13*self.ecranLargeur, y=0.04*self.ecranHauteur)
+        
+        boutonReinitialiser= Button(self.FrameChoixControle, text="Reinitialiser",state=NORMAL, command = lambda : self.ReinitialiserControle())  #A Faire
+        boutonReinitialiser.place(x=0.15*self.ecranLargeur, y=0.095*self.ecranHauteur)
+        
+        labelNomFichierDonnee=Label(self.FrameChoixControle,state=NORMAL, text='Nom Fichier')
+        labelNomFichierDonnee.place(x=0.095*self.ecranLargeur, y=0.01*self.ecranHauteur)
+        
+        self.NomFicherDonnee = StringVar()
+        EntryFichierDonnee = Entry(self.FrameChoixControle,state=NORMAL, textvariable=self.NomFicherDonnee, width=15)
+        EntryFichierDonnee .place(x=0.15*self.ecranLargeur, y=0.01*self.ecranHauteur)
+    
+    def ReinitialiserControle(self) :
+        self.FrameFenetreControle.destroy()
+        self.CompteurControle=0
+        self.CreerFrameControle()
+        
+        
+    def ValiderChoixControle(self) :
+        
+        if self.boutonMasse["state"]==DISABLED or self.boutonEpaisseur["state"]==DISABLED or self.boutonDurete["state"]==DISABLED or self.boutonDiametre["state"]==DISABLED :
+            self.boutonMasse.configure(state=NORMAL)
+            self.boutonEpaisseur.configure(state=NORMAL)
+            self.boutonDurete.configure(state=NORMAL)
+            self.boutonDiametre.configure(state=NORMAL)
+
+            for widget in self.FrameControleMasse.winfo_children() :
+                widget.configure(state=DISABLED)
+            for widget in self.FrameControleEpaisseur.winfo_children() :
+                widget.configure(state=DISABLED)
+            for widget in self.FrameControleDurete.winfo_children():
+                widget.configure(state=DISABLED)
+            for widget in self.FrameControleDiametre.winfo_children() :
+                widget.configure(state=DISABLED)
+        
+        else : 
+            self.boutonMasse.configure(state=DISABLED)
+            self.boutonEpaisseur.configure(state=DISABLED)
+            self.boutonDiametre.configure(state=DISABLED)
+            self.boutonDurete.configure(state=DISABLED)
+            if self.variableMasse.get()==1 :
+                for i in range(len(self.FrameControleMasse.winfo_children())-5) :
+                    self.FrameControleMasse.winfo_children()[i].configure(state=NORMAL)
+                self.FrameControleMasse.winfo_children()[8].configure(state=NORMAL)
+            if self.variableEpaisseur.get()==1 :
+                for i in range(len(self.FrameControleEpaisseur.winfo_children())-5) :
+                    self.FrameControleEpaisseur.winfo_children()[i].configure(state=NORMAL)
+                self.FrameControleEpaisseur.winfo_children()[8].configure(state=NORMAL)
+            
+            if self.variableDurete.get()==1 :
+                for i in range(len(self.FrameControleDurete.winfo_children())-5) :
+                    self.FrameControleDurete.winfo_children()[i].configure(state=NORMAL)
+                self.FrameControleDurete.winfo_children()[8].configure(state=NORMAL)
+            if self.variableDiametre.get()==1 :
+                for i in range(len(self.FrameControleDiametre.winfo_children())-5) :
+                    self.FrameControleDiametre.winfo_children()[i].configure(state=NORMAL)
+                self.FrameControleDiametre.winfo_children()[8].configure(state=NORMAL)
+                
+### 2.2 Choix des rÃ©glages et Saisi des donnees / Carte de controle  
+
+
+    def CreerFrameControleReglages(self):
+
+        self.CompteurGeometrie=1
+        self.CreerFrameControleReglage("Masse")
+        self.CompteurGeometrie=2
+        self.CreerFrameControleReglage("Epaisseur")
+        self.CompteurGeometrie=3
+        self.CreerFrameControleReglage("Durete")
+        self.CompteurGeometrie=4
+        self.CreerFrameControleReglage("Diametre")
+    
+    def CreerFrameControleReglage(self,Obj) :
+        
+        exec("self.FrameControle{0}= LabelFrame(self.FrameFenetreControle,text='{0}',width =0.23*self.ecranLargeur, height =0.1672*self.ecranHauteur,borderwidth=2, relief=GROOVE)".format(Obj))
+        exec("self.FrameControle{0}.pack_propagate(FALSE)".format(Obj))
+        exec("self.FrameControle{0}.place(x=0.01*self.ecranLargeur, y=0.1672*self.ecranHauteur*self.CompteurGeometrie -5)".format(Obj))
+        
+        exec("label{0}ValeurCible = Label( self.FrameControle{0}, text='Valeur Cible', state=DISABLED)".format(Obj))
+        exec("label{0}ValeurCible.place(x=0.01*self.ecranLargeur,y=0.01*self.ecranHauteur) ".format(Obj))
+        exec("self.variable{0}ValeurCible = DoubleVar()".format(Obj))
+        exec("variable{0}ValeurCible= Entry( self.FrameControle{0}, textvariable=self.variable{0}ValeurCible, width=10,state=DISABLED)".format(Obj))
+        exec("variable{0}ValeurCible.place(x=0.07*self.ecranLargeur, y=0.01*self.ecranHauteur)".format(Obj))
+        
+        exec("label{0}NbrEchantillon = Label( self.FrameControle{0}, text='Mesures/Ech', state=DISABLED)".format(Obj))
+        exec("label{0}NbrEchantillon.place(x=0.01*self.ecranLargeur,y=0.04*self.ecranHauteur)" .format(Obj))
+        exec("self.variable{0}NbrEchantillon= IntVar()".format(Obj))
+        exec("variable{0}NbrEchantillon= Entry( self.FrameControle{0}, textvariable=self.variable{0}NbrEchantillon, width=10, state=DISABLED)".format(Obj))
+        exec("variable{0}NbrEchantillon.place(x=0.07*self.ecranLargeur, y=0.04*self.ecranHauteur)".format(Obj))
+        
+        exec("label{0}NbrOperateur = Label( self.FrameControle{0}, text='Nbr OpÃ©rateurs', state=DISABLED)".format(Obj))
+        exec("label{0}NbrOperateur.place(x=0.01*self.ecranLargeur,y=0.07*self.ecranHauteur) ".format(Obj))
+        exec("self.variable{0}NbrOperateur = IntVar()".format(Obj))
+        exec("variable{0}NbrOperateur= Entry( self.FrameControle{0}, textvariable=self.variable{0}NbrOperateur, width=10, state=DISABLED)".format(Obj))
+        exec("variable{0}NbrOperateur.place(x=0.07*self.ecranLargeur, y=0.07*self.ecranHauteur)".format(Obj))
+        
+        exec("label{0}Echantillon = Label( self.FrameControle{0}, text='Entrer Valeurs', state=DISABLED)".format(Obj))
+        exec("label{0}Echantillon .place(x=0.01*self.ecranLargeur,y=0.11*self.ecranHauteur) ".format(Obj))
+        exec("self.variable{0}Echantillon  = StringVar()".format(Obj))
+        exec("Entrer{0}Echantillon = Entry( self.FrameControle{0}, textvariable=self.variable{0}Echantillon , width=10, state=DISABLED)".format(Obj))
+        exec("Entrer{0}Echantillon.place(x=0.07*self.ecranLargeur, y=0.11*self.ecranHauteur)".format(Obj))
+        
+
+        exec("self.compteurEchantillon{0}=0".format(Obj))
+        exec("self.listeFloat{0}Totale=[]".format(Obj))
+        
+        if Obj=="Masse" :
+            
+            self.CreationBoutonControleReglageMasse()
+            
+        if Obj=="Epaisseur" :
+            
+            self.CreationBoutonControleReglageEpaisseur()
+        
+        if Obj=="Durete" :
+            
+            self.CreationBoutonControleReglageDurete()
+                
+        if Obj=="Diametre" :
+            
+            self.CreationBoutonControleReglageDiametre()
+    
+  
+    def CreationBoutonControleReglageMasse(self) : 
+    
+        boutonValidationMasse= Button(self.FrameControleMasse, text='Validation\nParamÃ¨tres', command = lambda : self.ValiderReglage('Masse'), state=DISABLED)
+        boutonValidationMasse.place(x=0.12*self.ecranLargeur,y=0.03*self.ecranHauteur)
+        
+        boutonValidationDonneeMasse= Button(self.FrameControleMasse, text='Validation Echantillon', command = lambda : self.ValiderDonnee('Masse'), state=DISABLED)
+        boutonValidationDonneeMasse.place(x=0.12*self.ecranLargeur,y=0.11*self.ecranHauteur)
+        
+        boutonSwitchMasse = Button(self.FrameControleMasse, text='Calcul\nGraphique', command = lambda : self.CreerFrameCarteControleMasse(), state=DISABLED)
+        boutonSwitchMasse.place(x=0.18*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        
+        self.CompteurMasse=0
+        
+        
+    def CreationBoutonControleReglageEpaisseur(self) : 
+    
+        boutonValidationEpaisseur= Button(self.FrameControleEpaisseur, text='Validation\nParamÃ¨tres', command = lambda : self.ValiderReglage('Epaisseur'), state=DISABLED)
+        boutonValidationEpaisseur.place(x=0.12*self.ecranLargeur,y=0.03*self.ecranHauteur)
+        
+        boutonValidationDonneeEpaisseur= Button(self.FrameControleEpaisseur, text='Validation Echantillon', command = lambda : self.ValiderDonnee('Epaisseur'), state=DISABLED)
+        boutonValidationDonneeEpaisseur.place(x=0.12*self.ecranLargeur,y=0.11*self.ecranHauteur)
+        
+        boutonSwitchEpaisseur = Button(self.FrameControleEpaisseur, text='Calcul\nGraphique', command = lambda : self.CreerFrameCarteControleEpaisseur(), state=DISABLED)
+        boutonSwitchEpaisseur.place(x=0.18*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        
+        self.CompteurEpaisseur=0
+    
+    def CreationBoutonControleReglageDurete(self) : 
+    
+        boutonValidationDurete= Button(self.FrameControleDurete, text='Validation\nParamÃ¨tres', command = lambda : self.ValiderReglage('Durete'), state=DISABLED)
+        boutonValidationDurete.place(x=0.12*self.ecranLargeur,y=0.03*self.ecranHauteur)
+        
+        boutonValidationDonneeDurete= Button(self.FrameControleDurete, text='Validation Echantillon', command = lambda : self.ValiderDonnee('Durete'), state=DISABLED)
+        boutonValidationDonneeDurete.place(x=0.12*self.ecranLargeur,y=0.11*self.ecranHauteur)
+        
+        boutonSwitchDurete = Button(self.FrameControleDurete, text='Calcul\nGraphique', command = lambda : self.CreerFrameCarteControleDurete(), state=DISABLED)
+        boutonSwitchDurete.place(x=0.18*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        
+        self.CompteurDurete=0
+        
+    def CreationBoutonControleReglageDiametre(self) : 
+    
+        boutonValidationDiametre= Button(self.FrameControleDiametre, text='Validation\nParamÃ¨tres', command = lambda : self.ValiderReglage('Diametre'), state=DISABLED)
+        boutonValidationDiametre.place(x=0.12*self.ecranLargeur,y=0.03*self.ecranHauteur)
+        
+        boutonValidationDonneeDiametre= Button(self.FrameControleDiametre, text='Validation Echantillon', command = lambda : self.ValiderDonnee('Diametre'), state=DISABLED)
+        boutonValidationDonneeDiametre.place(x=0.12*self.ecranLargeur,y=0.11*self.ecranHauteur)
+        
+        boutonSwitchDiametre = Button(self.FrameControleDiametre, text='Calcul\nGraphique', command = lambda : self.CreerFrameCarteControleDiametre(), state=DISABLED)
+        boutonSwitchDiametre.place(x=0.18*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        
+        self.CompteurDiametre=0
+        
+    def ValiderDonnee(self,Obj):
+
+        exec("Entree=self.variable{0}Echantillon.get()".format(Obj))
+        listeString=Entree.split(",")
+        exec("listeFloat{0}=[]".format(Obj))
+        
+        exec("NbrEchantillon=self.variable{0}NbrEchantillon.get()".format(Obj))
+        if NbrEchantillon==len(listeString):
+            for i in range(len(listeString)):
+                exec("listeFloat{0}.append(float(listeString[i]))".format(Obj))
+            
+            exec("self.variable{0}Echantillon.set('')".format(Obj))
+            exec("self.listeFloat{0}Totale.extend(listeFloat{0})".format(Obj))
+            exec("self.compteurEchantillon{0}+=1".format(Obj))
+        
+    def ValiderReglage(self,Obj):
+        
+        
+        exec("if  self.FrameControle{0}.winfo_children()[0]['state']==NORMAL : \n\t for i in range(len(self.FrameControle{0}.winfo_children())-5) : self.FrameControle{0}.winfo_children()[i].configure(state=DISABLED)\nelse : \n\tfor i in range(len(self.FrameControle{0}.winfo_children())-5) : self.FrameControle{0}.winfo_children()[i].configure(state=NORMAL) ".format(Obj))
+        
+        
+        exec("if  self.FrameControle{0}.winfo_children()[6]['state']==DISABLED : \n\tself.FrameControle{0}.winfo_children()[6].configure(state=NORMAL)\n\tself.FrameControle{0}.winfo_children()[7].configure(state=NORMAL)\n\tself.FrameControle{0}.winfo_children()[9].configure(state=NORMAL)\n\tself.FrameControle{0}.winfo_children()[10].configure(state=NORMAL)\nelse :\n\tself.FrameControle{0}.winfo_children()[6].configure(state=DISABLED)\n\tself.FrameControle{0}.winfo_children()[7].configure(state=DISABLED)\n\tself.FrameControle{0}.winfo_children()[9].configure(state=DISABLED)\n\tself.FrameControle{0}.winfo_children()[10].configure(state=DISABLED)".format(Obj))
+        
+
+### 2.3 Calcul des valeurs statistiques et CrÃ©ation des graphiques / Carte de controle 
+                    
+    
+        
+    def CreerFrameCarteControleMasse(self) :
+
+        if len( self.listeFloatMasseTotale)%(self.variableMasseNbrEchantillon.get()*self.variableMasseNbrOperateur.get())==0:
+            
+            self.CalculValeurs("Masse")
+            if self.CompteurMasse==0:
+                self.CreerFrameGraphMasse()
+                self.CreerFrameControleGraphe("Masse")
+                Self.CompteurMasse+=1
+            else : 
+                self.FrameCarteControleMasse.tkraise()
+                self.DetruireFrameControleGraphe("Masse")
+                self.CreerFrameControleGraphe("Masse")
+                
+            self.CreerFrameNormaliteGraph("Masse")
+            self.CreerFrameShewhart("Masse")
+            self.CreerFrameCapabiliteGraph("Masse")
+            self.CreerFrameStatistique("Masse")
+            self.AfficherValeurs("Masse")
+        else : 
+            None #Message Erreur
+        
+    def CreerFrameCarteControleEpaisseur(self) :
+        
+        self.CalculValeurs("Epaisseur")
+        if self.CompteurEpaisseur==0:
+            self.CreerFrameGraphEpaisseur()
+            self.CreerFrameControleGraphe("Epaisseur")
+            Self.CompteurEpaisseur+=1
+        else : 
+            self.CreerFrameControleGraphe("Epaisseur")
+            self.DetruireFrameControleGraphe("Epaisseur")
+            self.FrameCarteControleEpaisseur.tkraise()
+        self.CreerFrameNormaliteGraph("Epaisseur")
+        self.CreerFrameShewhart("Epaisseur")
+        self.CreerFrameCapabiliteGraph("Epaisseur")
+        self.CreerFrameStatistique("Epaisseur")
+        self.AfficherValeurs("Epaisseur")
+        
+    def CreerFrameCarteControleDurete(self) :
+        
+        self.CalculValeurs("Durete")
+        if self.CompteurDurete==0:
+            self.CreerFrameGraphDurete()
+            self.CreerFrameControleGraphe("Durete")
+            Self.CompteurDurete+=1
+        else : 
+            self.CreerFrameControleGraphe("Durete")
+            self.DetruireFrameControleGraphe("Durete")
+            self.FrameCarteControleDurete.tkraise()
+
+        self.CreerFrameNormaliteGraph("Durete")
+        self.CreerFrameShewhart("Durete")
+        self.CreerFrameStatistique("Durete")
+        self.CreerFrameCapabiliteGraph("Durete")
+        self.AfficherValeurs("Durete")
+        
+    def CreerFrameCarteControleDiametre(self) :
+        
+        print self.variableDiametreValeurCible.get()
+        self.CalculValeurs("Diametre")
+        if self.CompteurDiametre==0:
+            self.CreerFrameGraphDiametre()
+            self.CreerFrameControleGraphe("Diametre")
+            self.CompteurDiametre+=1
+        else : 
+            self.DetruireFrameControleGraphe("Diametre")
+            self.CreerFrameControleGraphe("Diametre")
+            self.FrameCarteControleDiametre.tkraise()
+        self.CreerFrameNormaliteGraph("Diametre")
+        self.CreerFrameShewhart("Diametre")
+        self.CreerFrameStatistique("Diametre")
+        self.CreerFrameCapabiliteGraph("Diametre")
+        self.AfficherValeurs("Diametre")
+
+
+    def CreerFrameGraphMasse(self) :
+        
+        self.FrameCarteControleMasse = LabelFrame(self.FrameFenetreControle,text='Carte de controle Masse',width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameCarteControleMasse.pack_propagate(FALSE)
+        self.FrameCarteControleMasse.place(x=0.25*self.ecranLargeur,y=0.01*self.ecranHauteur)
+
+        self.boutonSwitchHistogrammeMasse= Button(self.FrameCarteControleDiametre, text='Histogramme', command = lambda : self.SwitchHistogramme('Masse'), background='green')
+        self.boutonSwitchHistogrammeMasse.place(x=0.62*self.ecranLargeur, y=0.100*self.ecranHauteur)
+        
+        self.boutonSwitchNormalMasse= Button(self.FrameCarteControleDiametre, text='NormalitÃ©', command = lambda : self.SwitchNormal('Masse'),background='red')
+        self.boutonSwitchNormalMasse.place(x=0.62*self.ecranLargeur, y=0.200*self.ecranHauteur)
+        
+        self.boutonSwitchShewartMasse= Button(self.FrameCarteControleDiametre, text='Shewart',background='red', command = lambda : self.SwitchShewhart('Masse'))
+        self.boutonSwitchShewartMasse.place(x=0.62*self.ecranLargeur, y=0.300*self.ecranHauteur)
+
+    
+    def CreerFrameGraphEpaisseur(self) :
+        
+        self.FrameCarteControleEpaisseur = LabelFrame(self.FrameFenetreControle,text='Carte de controle Epaisseur',width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameCarteControleEpaisseur.pack_propagate(FALSE)
+        self.FrameCarteControleEpaisseur.place(x=0.25*self.ecranLargeur,y=0.01*self.ecranHauteur)
+
+        self.boutonSwitchHistogrammeEpaisseur= Button(self.FrameCarteControleDiametre, text='Histogramme', command = lambda : self.SwitchHistogramme('Epaisseur'), background='green')
+        self.boutonSwitchHistogrammeEpaisseur.place(x=0.62*self.ecranLargeur, y=0.100*self.ecranHauteur)
+        
+        self.boutonSwitchNormalEpaisseur = Button(self.FrameCarteControleDiametre, text='NormalitÃ©', command = lambda : self.SwitchNormal('Epaisseur'),background='red')
+        self.boutonSwitchNormalEpaisseur.place(x=0.62*self.ecranLargeur, y=0.200*self.ecranHauteur)
+        
+        self.boutonSwitchShewartEpaisseur= Button(self.FrameCarteControleDiametre, text='Shewart',background='red', command = lambda : self.SwitchShewhart('Epaisseur'))
+        self.boutonSwitchShewartEpaisseur.place(x=0.62*self.ecranLargeur, y=0.300*self.ecranHauteur)
+
+        
+    def CreerFrameGraphDurete(self) :
+        
+        self.FrameCarteControleDurete = LabelFrame(self.FrameFenetreControle,text='Carte de controle Durete',width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameCarteControleDurete.pack_propagate(FALSE)
+        self.FrameCarteControleDurete.place(x=0.25*self.ecranLargeur,y=0.01*self.ecranHauteur)
+
+        self.boutonSwitchHistogrammeDurete= Button(self.FrameCarteControleDiametre, text='Histogramme', command = lambda : self.SwitchHistogramme('Durete'), background='green')
+        self.boutonSwitchHistogrammeDurete.place(x=0.62*self.ecranLargeur, y=0.100*self.ecranHauteur)
+        
+        self.boutonSwitchNormalDurete = Button(self.FrameCarteControleDiametre, text='NormalitÃ©', command = lambda : self.SwitchNormal('Durete'),background='red')
+        self.boutonSwitchNormalDurete.place(x=0.62*self.ecranLargeur, y=0.200*self.ecranHauteur)
+        
+        self.boutonSwitchShewartDurete= Button(self.FrameCarteControleDiametre, text='Shewart',background='red', command = lambda : self.SwitchShewhart('Durete'))
+        self.boutonSwitchShewartDurete.place(x=0.62*self.ecranLargeur, y=0.300*self.ecranHauteur)
+
+        
+    def CreerFrameGraphDiametre(self) :
+        
+        self.FrameCarteControleDiametre = LabelFrame(self.FrameFenetreControle,text='Carte de controle Diametre',width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameCarteControleDiametre.pack_propagate(FALSE)
+        self.FrameCarteControleDiametre.place(x=0.25*self.ecranLargeur,y=0.01*self.ecranHauteur)
+
+        self.boutonSwitchHistogrammeDiametre= Button(self.FrameCarteControleDiametre, text='Histogramme', command = lambda : self.SwitchHistogramme('Diametre'), background='green')
+        self.boutonSwitchHistogrammeDiametre.place(x=0.62*self.ecranLargeur, y=0.100*self.ecranHauteur)
+        
+        self.boutonSwitchNormalDiametre = Button(self.FrameCarteControleDiametre, text='NormalitÃ©', command = lambda : self.SwitchNormal('Diametre'),background='red')
+        self.boutonSwitchNormalDiametre.place(x=0.62*self.ecranLargeur, y=0.200*self.ecranHauteur)
+        
+        self.boutonSwitchShewhartDiametre= Button(self.FrameCarteControleDiametre, text='Shewhart',background='red', command = lambda : self.SwitchShewhart('Diametre'))
+        self.boutonSwitchShewhartDiametre.place(x=0.62*self.ecranLargeur, y=0.300*self.ecranHauteur)
+
+        
+        
+    def SwitchHistogramme(self,Obj):
+        
+        exec("self.FrameCapabiliteGraph{0}.tkraise()".format(Obj))
+        exec("self.boutonSwitchHistogramme{0}.configure(background='green')".format(Obj))
+        exec("self.boutonSwitchNormal{0}.configure(background='red')".format(Obj))
+        exec("self.boutonSwitchShewhart{0}.configure(background='red')".format(Obj))
+        
+        
+    def SwitchNormal(self,Obj):
+        
+        exec("self.FrameNormaliteGraph{0}.tkraise()".format(Obj))
+        exec("self.boutonSwitchHistogramme{0}.configure(background='red')".format(Obj))
+        exec("self.boutonSwitchNormal{0}.configure(background='green')".format(Obj))
+        exec("self.boutonSwitchShewhart{0}.configure(background='red')".format(Obj))
+    
+    def SwitchShewhart(self,Obj):
+        exec("self.FrameShewhart{0}.tkraise()".format(Obj))
+        exec("self.boutonSwitchHistogramme{0}.configure(background='red')".format(Obj))
+        exec("self.boutonSwitchNormal{0}.configure(background='red')".format(Obj))
+        exec("self.boutonSwitchShewhart{0}.configure(background='green')".format(Obj))
+        
+    def DetruireFrameControleGraphe(self,Obj):
+        
+        exec("self.FrameControleGraph{0}.destroy()".format(Obj))
+        
+    def CreerFrameControleGraphe(self,Obj):
+        
+        
+        exec("self.FrameControleGraph{0} = LabelFrame(self.FrameCarteControle{0},text='',width =0.61*self.ecranLargeur, height =0.65*self.ecranHauteur,borderwidth=0, relief=GROOVE)".format(Obj))
+        exec("self.FrameControleGraph{0}.pack_propagate(FALSE)".format(Obj))
+        exec("self.FrameControleGraph{0}.place(x=0*self.ecranLargeur, y=0*self.ecranHauteur)".format(Obj))
+        
+        
+    def CreerFrameStatistique(self,Obj) :
+        
+        exec("self.FrameStatistiques{0} = LabelFrame(self.FrameCarteControle{0},text='Statistiques',width =0.68*self.ecranLargeur, height =0.15*self.ecranHauteur,borderwidth=0, relief=GROOVE)".format(Obj))
+        exec("self.FrameStatistiques{0}.pack_propagate(FALSE)".format(Obj))
+        exec("self.FrameStatistiques{0}.place(x=0*self.ecranLargeur, y=0.65*self.ecranHauteur)".format(Obj))
+        
+        ListeValeursNoms=["DonneesGenerales","CartedeShewart","Capabilite","MethodeRetR","Moyenne","EcartType","Minimum","Mediane","Maximum","Totale","ValeurCible","EffectifEchantillon","CV","TS","TI","IT","Cp","LSC","LSS","LIC","LIS","Cpk","Cpm","EV","PourcentEV","AV","PourcentAV","RetR","PourcentRetR","PV","PourcentPV","TV","Cpc","PsurT","ndc","A"]
+
+        
+        for i in range(0,4):
+            exec("label{0}=Label(self.FrameStatistiques{1}, text='{0}',font=15)".format(ListeValeursNoms[i],Obj))
+            exec("self.variable{0}{1}=StringVar()".format(ListeValeursNoms[i],Obj))
+            exec("Valeur{0}=Label(self.FrameStatistiques{1}, text='{0}',textvariable=self.variable{0}{1})".format(ListeValeursNoms[i],Obj))
+        
+        for i in range(4,len(ListeValeursNoms)):
+            exec("label{0}=Label(self.FrameStatistiques{1}, text='{0}')".format(ListeValeursNoms[i],Obj))
+            exec("self.variable{0}{1}=StringVar()".format(ListeValeursNoms[i],Obj))
+            exec("Valeur{0}=Label(self.FrameStatistiques{1}, text='{0}',textvariable=self.variable{0}{1})".format(ListeValeursNoms[i],Obj))
+            
+        
+        labelDonneesGenerales.place(x=0.04*self.ecranLargeur,y=0.01*self.ecranHauteur)
+        labelCartedeShewart.place(x=0.22*self.ecranLargeur,y=0.01*self.ecranHauteur)
+        labelCapabilite.place(x=0.35*self.ecranLargeur,y=0.01*self.ecranHauteur)
+        labelMethodeRetR.place(x=0.52*self.ecranLargeur,y=0.01*self.ecranHauteur)
+        
+        labelMinimum.place(x=0.01*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        ValeurMinimum.place(x=0.05*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        labelMaximum.place(x=0.01*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        ValeurMaximum.place(x=0.05*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        labelMoyenne.place(x=0.01*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        ValeurMoyenne.place(x=0.05*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        labelCV.place(x=0.01*self.ecranLargeur,y=0.10*self.ecranHauteur)
+        ValeurCV.place(x=0.05*self.ecranLargeur,y=0.10*self.ecranHauteur)
+        labelMediane.place(x=0.08*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        ValeurMediane.place(x=0.12*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        labelEcartType.place(x=0.08*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        ValeurEcartType.place(x=0.12*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        labelTotale.place(x=0.08*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        ValeurTotale.place(x=0.12*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        
+        labelLIS.place(x=0.20*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        ValeurLIS.place(x=0.22*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        labelLIC.place(x=0.20*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        ValeurLIC.place(x=0.22*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        labelIT.place(x=0.20*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        ValeurIT.place(x=0.22*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        labelLSS.place(x=0.25*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        ValeurLSS.place(x=0.27*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        labelLSC.place(x=0.25*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        ValeurLSC.place(x=0.27*self.ecranLargeur,y=0.06*self.ecranHauteur)
+
+        labelCp.place(x=0.35*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        ValeurCp.place(x=0.37*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        labelCpk.place(x=0.35*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        ValeurCpk.place(x=0.37*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        labelCpm.place(x=0.35*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        ValeurCpm.place(x=0.37*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        
+        labelEV.place(x=0.45*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        ValeurEV.place(x=0.47*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        labelAV.place(x=0.45*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        ValeurAV.place(x=0.47*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        labelRetR.place(x=0.45*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        ValeurRetR.place(x=0.47*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        labelPV.place(x=0.45*self.ecranLargeur,y=0.10*self.ecranHauteur)
+        ValeurPV.place(x=0.47*self.ecranLargeur,y=0.10*self.ecranHauteur)
+        
+        
+        labelPourcentEV.place(x=0.50*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        ValeurPourcentEV.place(x=0.55*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        labelPourcentAV.place(x=0.50*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        ValeurPourcentAV.place(x=0.55*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        labelPourcentRetR.place(x=0.50*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        ValeurPourcentRetR.place(x=0.55*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        labelPourcentPV.place(x=0.50*self.ecranLargeur,y=0.10*self.ecranHauteur)
+        ValeurPourcentPV.place(x=0.55*self.ecranLargeur,y=0.10*self.ecranHauteur)
+        
+        labelTV.place(x=0.58*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        ValeurTV.place(x=0.60*self.ecranLargeur,y=0.04*self.ecranHauteur)
+        labelndc.place(x=0.58*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        Valeurndc.place(x=0.60*self.ecranLargeur,y=0.06*self.ecranHauteur)
+        labelCpc.place(x=0.58*self.ecranLargeur,y=0.08*self.ecranHauteur)
+        ValeurCpc.place(x=0.60*self.ecranLargeur,y=0.08*self.ecranHauteur)
+
+        
+    def CreerFrameNormaliteGraph(self,Obj) :
+        
+        exec("self.FrameNormaliteGraph{0} = LabelFrame(self.FrameControleGraph{0},width =0.61*self.ecranLargeur, height =0.65*self.ecranHauteur,borderwidth=0, relief=GROOVE)".format(Obj))
+        exec("self.FrameNormaliteGraph{0}.pack_propagate(FALSE)".format(Obj))
+        exec("self.FrameNormaliteGraph{0}.place(x=0*self.ecranLargeur/1280, y=0*self.ecranHauteur/1024)".format(Obj))
+        exec("self.FrameNormaliteGraph{0}.tkraise()".format(Obj))
+
+
+        f = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=100, tight_layout=True)
+        a = f.add_subplot(111)
+        exec("measurements =self.listeFloat{0}Totale".format(Obj))
+        scipy.stats.probplot(measurements, dist="norm", plot=a)
+        a.grid(True)
+        exec("a.text(-2,self.ListeValeurs{0}[4],'A= '+str(self.ListeValeurs{0}[31]))".format(Obj))
+        a.set_xlabel('Valeur Normale')
+        a.set_ylabel('Valeur Observee')
+        a.set_title('Droite de Henry')
+        a.plot()
+
+        exec("canvasCapabiliteGraph{0} = FigureCanvasTkAgg(f, master=self.FrameNormaliteGraph{0})".format(Obj))
+        exec("canvasCapabiliteGraph{0} .show()".format(Obj))
+        exec("canvasCapabiliteGraph{0} .get_tk_widget().place(x=10,y=10)".format(Obj))
+    
+    def CreerFrameShewhart(self,Obj) :
+        
+        exec("self.FrameShewhart{0} = LabelFrame(self.FrameControleGraph{0},width=0.61*self.ecranLargeur, height =0.65*self.ecranHauteur,borderwidth=0, relief=GROOVE)".format(Obj))
+        exec("self.FrameShewhart{0}.pack_propagate(FALSE)".format(Obj))
+        exec("self.FrameShewhart{0}.place(x=0*self.ecranLargeur/1280, y=0*self.ecranHauteur/1024)".format(Obj))
+        
+        f = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=100,tight_layout=True)
+        a = f.add_subplot(111)
+        a.set_xlabel('Echantillons')
+        exec("a.set_ylabel('{0}')".format(Obj))
+        a.set_title('Carte de Shewhart')
+        a.grid(True)
+        exec("a.axhline(y=self.ListeValeurs{0}[13], linewidth=1, color='r',ls='--')".format(Obj))
+        exec("a.axhline(y=self.ListeValeurs{0}[15], linewidth=1, color='r',ls='--')".format(Obj))
+        exec("a.axhline(y=self.ListeValeurs{0}[14], linewidth=1, color='g',ls='--')".format(Obj))
+        exec("a.axhline(y=self.ListeValeurs{0}[16], linewidth=1, color='g',ls='--')".format(Obj))
+        exec("a.axhline(y=self.ListeValeurs{0}[6], linewidth=1, color='c',ls='-')".format(Obj))
+
+        exec("a.plot(self.ListeShewhart('{0}'),marker='x')".format(Obj))
+        exec("canvasCapabiliteGraph{0} = FigureCanvasTkAgg(f, master=self.FrameShewhart{0})".format(Obj))
+        exec("canvasCapabiliteGraph{0} .show()".format(Obj))
+        exec("canvasCapabiliteGraph{0} .get_tk_widget().place(x=10,y=10)".format(Obj))
+        
+    def CreerFrameCapabiliteGraph(self,Obj) :
+        
+        exec("self.FrameCapabiliteGraph{0} = LabelFrame(self.FrameControleGraph{0},width =0.61*self.ecranLargeur, height =0.65*self.ecranHauteur,borderwidth=0, relief=GROOVE)".format(Obj))
+        exec("self.FrameCapabiliteGraph{0}.pack_propagate(FALSE)".format(Obj))
+        exec("self.FrameCapabiliteGraph{0}.place(x=0*self.ecranLargeur/1280, y=0*self.ecranHauteur/1024)".format(Obj))
+        exec("ValeurCible = (self.ListeValeurs{0}[6])".format(Obj))
+        print ValeurCible
+        exec("Moyenne = (self.ListeValeurs{0}[0])".format(Obj))
+        exec("sigma = (self.ListeValeurs{0}[2])".format(Obj))
+        f = Figure(dpi=100,tight_layout=True,figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur))
+        a = f.add_subplot(111)
+        exec("n, bins, patches = a.hist(self.listeFloat{0}Totale, bins=10, normed=True, facecolor='b', alpha=0.75,ec='k')".format(Obj))
+        print (n, bins, patches)
+        # y = mlab.normpdf(bins, Moyenne, sigma)
+        # a.plot(bins, y, 'c--', linewidth=1)
+        exec("a.set_ylabel('{0}')".format(Obj))
+        a.set_ylabel(u'Proportion')
+        a.set_title('Histogramme')
+        exec("a.axis([(self.ListeValeurs{0}[6])-(self.ListeValeurs{0}[6])*0.01, (self.ListeValeurs{0}[6])+(self.ListeValeurs{0}[6])*0.01,0, max(n)*1.05])".format(Obj))
+        exec("a.axvline(x=self.ListeValeurs{0}[13], linewidth=1, color='r',ls='--')".format(Obj))
+        exec("a.axvline(x=self.ListeValeurs{0}[14], linewidth=1, color='g',ls='--')".format(Obj))
+        exec("a.axvline(x=self.ListeValeurs{0}[15], linewidth=1, color='r',ls='--')".format(Obj))
+        exec("a.axvline(x=self.ListeValeurs{0}[16], linewidth=1, color='g',ls='--')".format(Obj))
+        exec("a.axvline(x=self.ListeValeurs{0}[6], linewidth=1, color='c',ls='-')".format(Obj))
+        a.grid(True)
+        exec("print ((self.ListeValeurs{0}[4])-(self.ListeValeurs{0}[7])*0.05, (self.ListeValeurs{0}[4])+(self.ListeValeurs{0}[7])*0.05)".format(Obj))
+        exec("x = np.linspace((self.ListeValeurs{0}[6])-(self.ListeValeurs{0}[6])*0.01, (self.ListeValeurs{0}[6])+(self.ListeValeurs{0}[6])*0.01, 1000)".format(Obj))
+    
+        a.plot(x,scipy.stats.norm.pdf(x,ValeurCible,sigma),'y')
+        a.plot(x,scipy.stats.norm.pdf(x,Moyenne,sigma),'m')
+        
+        exec("canvasCapabiliteGraph{0} = FigureCanvasTkAgg(f, master=self.FrameCapabiliteGraph{0})".format(Obj))
+        exec("canvasCapabiliteGraph{0} .show()".format(Obj))
+        exec("canvasCapabiliteGraph{0} .get_tk_widget().place(x=10,y=10)".format(Obj))
+        
+    def CreerExemple(self) :
+        # self.listeFloatMasseTotale=[10,15,6,8,9,7,0,2,6,9,7,8,2,6,8,9,4,1,6,8,1,1,7,2,3,6,9,7,8,2]
+        self.listeFloatEpaisseurTotale=[10,15,6,8,9,7,0,2,6,9,7,8,2,6,8,9,4,1,6,8,1,1,7,2,3,6,9,7,8,2]
+        self.listeFloatDureteTotale=[10,15,6,8,9,7,0,2,6,9,7,8,2,6,8,9,4,1,6,8,1,1,7,2,3,6,9,7,8,2]
+        #self.listeFloatDiametreTotale=[10,15,6,8,9,7,0,2,6,9,7,8,2,6,8,9,4,1,6,8,1,1,7,2,3,6,9,7,8,2]
+        self.listeFloatDiametreTotale=[9.08,9.09,9.07,9.08,9.1,9.07,9.09,9.08,9.08,9.09,9.07,9.08,9.07,9.07,9.08,9.07,9.07,9.13,9.07,9.07,9.09,9.11,9.06,9.07,9.08,9.06,9.06,9.07,9.07,9.06,9.07,9.1,9.08,9.09,9.09,9.08,9.09,9.08,9.09,9.1,9.06,9.08,9.07,9.07,9.07,9.07,9.07,9.07,9.06,9.07,9.08,9.09,9.07,9.07,9.08,9.07,9.06,9.07,9.06,9.07]
+        
+        self.variableMasseNbrEchantillon.set(5)
+        self.variableEpaisseurNbrEchantillon.set(5)
+        self.variableDureteNbrEchantillon.set(5)
+        self.variableDiametreNbrEchantillon.set(10)
+        self.variableMasseNbrOperateur.set(3)
+        self.variableEpaisseurNbrOperateur.set(3)
+        self.variableDureteNbrOperateur.set(3)
+        self.variableDiametreNbrOperateur.set(3)
+        self.variableMasseValeurCible.set(10)
+        self.variableEpaisseurValeurCible.set(10)
+        self.variableDureteValeurCible.set(10)
+        self.variableDiametreValeurCible.set(9.085)
+    
+    def CreerMatrice(self) :
+        
+        self.Listed2=[1.128,1.693,2.059,2.326,2.534,2.704,2.847,2.970,3.078,3.173,3.258]
+        self.ListeAc=[3.874,2.464,1.936,1.653,1.452,1.315,1.209,1.127,1.059,1.002,0.953] 
+        self.ListeAs=[2.457,1.564,1.228,1.042,0.921,0.834,0.767,0.714,0.672,0.635,0.605]
+        self.ListeD2etoile=[1.41,1.91,2.24,2.48,2.67,2.83,2.96,3.08,3.18,3.27,3.35]
+        
+    def ListeShewhart(self,Obj):
+        
+        ListeMoyenne=[]
+        exec("ListeValeurs=self.listeFloat{0}Totale".format(Obj))
+        exec("NombrePieceEchantillon=len(ListeValeurs)/(self.variable{0}NbrEchantillon.get())".format(Obj))
+        for i in range(NombrePieceEchantillon):
+            exec("ListeMoyenne.append(self.Moyenne(ListeValeurs[0*i:(self.variable{0}NbrEchantillon).get()*(i+1)]))".format(Obj))
+        return ListeMoyenne
+        
+    
+    def Moyenne(self,listeDeValeurs):
+        return float(sum(listeDeValeurs))/float(len(listeDeValeurs))
+    
+    def EcartType(self,listeDeValeurs,moyenne):
+        Somme = 0
+        for i in range(len(listeDeValeurs)):
+            Somme+= (listeDeValeurs[i]-moyenne)**2
+        return m.sqrt(Somme/(len(listeDeValeurs)))
+    
+    def CoefficientVariation(self,Moyenne,EcartType):
+        return (EcartType/Moyenne)*100
+            
+    def Tau(self,ValeurCible,listeDeValeurs):
+        
+        Somme = 0
+        for i in range(len(listeDeValeurs)):
+            Somme+= (listeDeValeurs[i]-ValeurCible)**2
+        return m.sqrt(Somme/(len(listeDeValeurs)-1))
+    
+    def Rbarrebarre(self,listeDeValeurs,NombreEchantillons,NombreOperateurs) : 
+        
+        i=0
+        EtendueTotale=0
+        listeEchantillon=[]
+        
+        while i<(len(listeDeValeurs)/NombreEchantillons):
+            liste1Echantillon=[]
+            liste1Echantillon=listeDeValeurs[i*int(NombreEchantillons):(i*NombreEchantillons+NombreEchantillons)]
+            listeEchantillon.append(liste1Echantillon)
+            i+=1
+
+        for k in range(NombreOperateurs):
+            listeEtendue=[]
+            for j in range(NombreEchantillons):
+                Etendue=abs(listeEchantillon[k][j]-listeEchantillon[k+NombreOperateurs][j])
+                listeEtendue.append(Etendue)
+            
+            EtendueTotale+=self.Moyenne(listeEtendue)
+       
+        return EtendueTotale/NombreOperateurs
+        
+    def Sigmao(self,listeDeValeurs,NombreOperateurs,NombreEchantillons,Sigmae) : 
+        
+        listeEchantillon=[]
+        listeMoyenne=[]
+        for j in range (NombreOperateurs) :
+        
+            i=0
+            while i<(len(listeDeValeurs)/(int(NombreEchantillons)*int(NombreOperateurs))):
+                
+                liste1Echantillon=[]
+                liste1Echantillon=listeDeValeurs[NombreEchantillons*NombreOperateurs*i+j*NombreEchantillons:NombreEchantillons*NombreOperateurs*i+((j+1)*NombreEchantillons)]
+                
+                listeEchantillon.append(liste1Echantillon)
+                i+=1
+    
+        
+        for j in range (NombreOperateurs) :
+
+            listeEchantillon[j*(len(listeEchantillon)/NombreOperateurs)]+=(listeEchantillon[(j*len(listeEchantillon)/NombreOperateurs)+1])
+            listeMoyenne.append(self.Moyenne(listeEchantillon[j*(len(listeEchantillon)/NombreOperateurs)]))
+
+        X2barre=max(listeMoyenne)-min(listeMoyenne)
+        TermeA=((X2barre) / ( self.ListeD2etoile[NombreOperateurs-2] ) )**2
+
+        TermeB=(Sigmae**2) / ( len(listeDeValeurs) / (NombreOperateurs) ) #Erreur
+
+        return m.sqrt(TermeA-TermeB )
+        
+        
+    def VariabilitePiece(self, listeDeValeurs,NombreEchantillons,NombreOperateurs,Sigmae):
+        
+        i=0
+        ListeMoyenne=[]
+        for j in range((NombreEchantillons)):
+            liste1Echantillon=[]
+            i=0
+
+            while i<(NombreOperateurs*(len(listeDeValeurs)/(NombreEchantillons*NombreOperateurs))):
+                
+                liste1Echantillon.append(listeDeValeurs[i*NombreEchantillons+j])
+                i+=1
+
+            ListeMoyenne.append(self.Moyenne(liste1Echantillon))
+
+        Rp= max(ListeMoyenne)- min(ListeMoyenne)
+
+        return m.sqrt((Rp/self.ListeD2etoile[NombreEchantillons-2])**2-(Sigmae**2/(NombreOperateurs*(len(listeDeValeurs)/(NombreEchantillons*NombreOperateurs)))))
+        
+    def EcartTypeEchantillon(self,ListeValeurs,NombreMesureEchantillon):
+        EcartTypeTotale=0
+        for i in range (len(ListeValeurs)/NombreMesureEchantillon) :
+            liste=ListeValeurs[i:i+NombreMesureEchantillon]
+            Moy=self.Moyenne(liste)
+            EcartTypeTotale+=self.EcartType(liste,Moy)
+            print self.EcartType(liste,Moy)
+        return EcartTypeTotale/(len(ListeValeurs)/NombreMesureEchantillon)
+        
+    def CalculValeurs(self,Obj) :
+
+        #A MODIFIER Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§Â§
+        exec("listeFloatTotale=self.listeFloat{0}Totale".format(Obj))
+        print listeFloatTotale
+        Moyenne=self.Moyenne(listeFloatTotale)
+        # Mediane=5
+        Mediane=np.median(listeFloatTotale)
+        EcartType=self.EcartType(listeFloatTotale,Moyenne)
+        Minimum= min(listeFloatTotale)
+        Maximum= max(listeFloatTotale)
+        Totale= len(listeFloatTotale)
+        
+        exec("ValeurCible=self.variable{0}ValeurCible.get()".format(Obj))
+        print ValeurCible
+        exec("EffectifEchantillon=self.variable{0}NbrEchantillon.get()".format(Obj))
+        CV=self.CoefficientVariation(Moyenne,EcartType)
+        exec("TS=float(self.variable{0}ValeurCible.get())*1.05".format(Obj))
+        exec("TI=float(self.variable{0}ValeurCible.get())*0.95".format(Obj))
+        exec("IT= float(self.variable{0}ValeurCible.get())*0.10".format(Obj))
+        Cp = IT/(6*EcartType)
+        exec("EcartTypeEchantillon=self.EcartTypeEchantillon(listeFloatTotale,int(self.variable{0}NbrEchantillon.get()))".format(Obj))
+        print (self.ListeAc[int(self.variableDiametreNbrEchantillon.get())-2],self.ListeAs[int(self.variableDiametreNbrEchantillon.get())-2])
+        exec("LSC=float(self.variable{0}ValeurCible.get())+EcartTypeEchantillon*self.ListeAc[int(self.variable{0}NbrEchantillon.get())-2]".format(Obj))
+        exec("LSS=float(self.variable{0}ValeurCible.get())+EcartTypeEchantillon*self.ListeAs[int(self.variable{0}NbrEchantillon.get())-2]".format(Obj)) 
+        exec("LIC=float(self.variable{0}ValeurCible.get())-EcartTypeEchantillon*self.ListeAc[int(self.variable{0}NbrEchantillon.get())-2]".format(Obj))
+        exec("LIS=float(self.variable{0}ValeurCible.get())-EcartTypeEchantillon*self.ListeAs[int(self.variable{0}NbrEchantillon.get())-2]".format(Obj))
+        Cpk= min((Moyenne-TI)/(3*EcartType),(TS-Moyenne)/(3*EcartType))
+        print (EcartTypeEchantillon)
+        print (TI,TS)
+        print ((Moyenne-TI)/(3*EcartType),(TS-Moyenne)/(3*EcartType))
+        exec("Tau=self.Tau(float(self.variable{0}ValeurCible.get()),self.listeFloat{0}Totale)".format(Obj))
+        Cpm=(TS-TI)/6*Tau #A MODIFIER
+        exec("Sigmae=self.Rbarrebarre(self.listeFloat{0}Totale,int(self.variable{0}NbrEchantillon.get()),int(self.variable{0}NbrOperateur.get()))/self.Listed2[int(len(self.listeFloat{0}Totale)/(self.variable{0}NbrEchantillon.get()*self.variable{0}NbrOperateur.get())-2)]".format(Obj))
+        EV=Sigmae#*5.15
+        exec("Sigmao=self.Sigmao(self.listeFloat{0}Totale,int(self.variable{0}NbrOperateur.get()),int(self.variable{0}NbrEchantillon.get()),Sigmae)".format(Obj))
+        AV=Sigmao#*5.15
+        Sigmam=m.sqrt(Sigmae**2+Sigmao**2)
+        RetR=Sigmam#*5.15
+        exec("Sigmap=self.VariabilitePiece(self.listeFloat{0}Totale,int(self.variable{0}NbrEchantillon.get()),int(self.variable{0}NbrOperateur.get()),Sigmae)".format(Obj))
+        PV=Sigmap#*5.15
+        Sigmat=m.sqrt(Sigmam**2+Sigmap**2)
+        TV=Sigmat#*5.15
+        
+        Cpc=IT/Sigmam #PROBLEME???
+        PourcentEV=(EV/TV)*100
+        PourcentAV=(AV/TV)*100
+        PourcentRetR=(RetR/TV)*100
+        PourcentPV=(PV/TV)*100
+        PsurT=(6*Sigmam)/IT
+
+        ndc=(m.sqrt(2)*PV)/(RetR)
+        A=0.725
+        
+        exec("self.ListeValeurs{0}=[]".format(Obj))
+        exec("self.ListeValeurs{0}.extend([Moyenne,Mediane,EcartType,Minimum,Maximum,Totale,ValeurCible,EffectifEchantillon,CV,TS,TI,IT,Cp,LSC,LSS,LIC,LIS,Cpk,Cpm,EV,PourcentEV,AV,PourcentAV,RetR,PourcentRetR,PV,PourcentPV,TV,Cpc,PsurT,ndc,A])".format(Obj))
+        
+    def AfficherValeurs(self,Obj):
+        
+
+        ListeValeursNoms=["Moyenne","Mediane","EcartType","Minimum","Maximum","Totale","ValeurCible","EffectifEchantillon","CV","TS","TI","IT","Cp","LSC","LSS","LIC","LIS","Cpk","Cpm","EV","PourcentEV","AV","PourcentAV","RetR","PourcentRetR","PV","PourcentPV","TV","Cpc","PsurT","ndc","A"]
+        
+        for i in range(len(ListeValeursNoms)):
+            
+            exec("self.variable{0}{1}.set(Decimal(self.ListeValeurs{1}[i]).quantize(Decimal('0.001')))".format(ListeValeursNoms[i],Obj))
+            
+### 2.4 Enregistrements des donnÃ©es / Carte de controle 
+    def EnregistrerDonneeControleToute(self) :
+        
+        if self.variableMasse.get()==1 :
+            self.EnregistrerDonneeControle("Masse")
+        if self.variableEpaisseur.get()==1 :
+            self.EnregistrerDonneeControle("Epaisseur")
+        if self.variableDurete.get()==1 :
+            self.EnregistrerDonneeControle("Durete")
+        if self.variableDiametre.get()==1 :
+            self.EnregistrerDonneeControle("Diametre")
+        
+    def EnregistrerDonneeControle(self,Obj):
+        
+        os.chdir("C:\Users\BIOSTAT-Aplus\Documents\Data GI-View\Controle") #MODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDIFIER
+        exec("fichierDonnees = open(self.NomFicherDonnee.get()+'{0}.txt','w')".format(Obj))
+        ListeValeursNoms=["Moyenne","Mediane","EcartType","Minimum","Maximum","Totale","ValeurCible","EffectifEchantillon","CV","TS","TI","IT","Cp","LSC","LSS","LIC","LIS","Cpk","Cpm","EV","PourcentEV","AV","PourcentAV","RetR","PourcentRetR","PV","PourcentPV","TV","Cpc","PsurT","ndc","A"]
+        
+        exec("listeDeValeurs=self.ListeValeurs{0}".format(Obj))
+        
+        for i in range(len(ListeValeursNoms)) :
+            exec("fichierDonnees.write('{0};')".format(ListeValeursNoms[i]))
+        fichierDonnees.write("\n")
+        for i in range(len(ListeValeursNoms)) :
+            Valeur=Decimal(listeDeValeurs[i]).quantize(Decimal('0.001'))
+            exec("fichierDonnees.write('{0};')".format(Valeur))
+        fichierDonnees.write("\n")
+        
+        exec("NombreEchantillons=int(self.variable{0}NbrEchantillon.get())".format(Obj))
+        exec("NombreOperateurs=int(self.variable{0}NbrOperateur.get())".format(Obj))
+        
+        listeEchantillon=[]
+        exec("listeDeValeurs=self.listeFloat{0}Totale".format(Obj))
+        i=0
+        while i<(len(listeDeValeurs)/NombreEchantillons):
+            liste1Echantillon=[]
+            liste1Echantillon=listeDeValeurs[i*int(NombreEchantillons):(i*NombreEchantillons+NombreEchantillons)]
+            listeEchantillon.append(liste1Echantillon)
+            i+=1
+            
+        for i in range(len(listeEchantillon)/NombreOperateurs):
+            exec("fichierDonnees.write('; Echantillon {0}')".format(i+1))
+            for j in range(NombreEchantillons):
+                fichierDonnees.write(';')
+        
+        fichierDonnees.write(";\n")
+
+        for i  in range(NombreOperateurs):
+            exec("fichierDonnees.write('Operateur {0} ;')".format(i+1))
+            
+            for k in range(len(listeEchantillon)/NombreOperateurs) :
+                
+                for j in range(NombreEchantillons):
+                    
+                        exec("fichierDonnees.write('{0},')".format(listeEchantillon[k*i][j]))
+                fichierDonnees.write(";")
+            fichierDonnees.write("\n")
+    
+        fichierDonnees.close()
+        
+
+### 3 Etudes
+
+
+    def CreerFrameEtude (self) :
+        
+        if self.CompteurEtude==0:
+            
+            self.FrameFenetreEtude=LabelFrame(fenetre,text="",width=0.95*self.ecranLargeur, height=0.86*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+            self.FrameFenetreEtude.pack_propagate(FALSE)
+            self.FrameFenetreEtude.place (x=0.02*self.ecranLargeur,y=0.1*self.ecranHauteur)
+            
+            self.CreerFrameChoixEtude()
+            self.CreerFrameAnalyse()
+            self.CreerFrameEtudeGraphique()
+            
+            self.boutonVisualisation.configure(background="red")
+            self.boutonControle.configure(background="red")
+            self.boutonEtude.configure(background="green")
+            self.boutonEtalonnage.configure(background="red")
+            
+            self.valForceCompMax = [] #Liste donnant la force de compression maximale par cycle
+            self.epaisseur = [] #Liste Ã©paisseur du comprime par cycle
+            self.moyenneForceComp = [] #Liste donnant la moyenne force compressions tous les x cycles
+            self.dureteD = []
+            self.masseM = []
+            self.comptUn = 0
+            
+            self.CompteurEtude=1
+        else :
+            self.FrameFenetreEtude.tkraise()
+            
+        self.boutonVisualisation.configure(background="red")
+        self.boutonControle.configure(background="red")
+        self.boutonEtude.configure(background="green")
+        self.boutonEtalonnage.configure(background="red")
+
+### 3.1 Choix des rÃ©glages / Etudes
+    
+    def CreerFrameChoixEtude(self) :
+        
+        self.FrameChoixEtude = LabelFrame(self.FrameFenetreEtude,text="Choix Etude",width =0.23*self.ecranLargeur, height =0.42*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameChoixEtude.pack_propagate(FALSE)
+        self.FrameChoixEtude.place(x=0.01*self.ecranLargeur, y=0.01*self.ecranHauteur)
+        
+        nomComprime = Label(self.FrameChoixEtude, text="Nom du comprime : ")
+        nomComprime.place(x=0.011*self.ecranLargeur, y=0.02*self.ecranHauteur)
+        self.nameComprime = StringVar()
+        self.comprime = Entry(self.FrameChoixEtude, textvariable=self.nameComprime, width=30)
+        self.comprime.place(x=0.058*self.ecranLargeur, y=0.06*self.ecranHauteur)
+        
+        nbrCycle = Label(self.FrameChoixEtude, text="Nombre de cycle de compression a relever : ")
+        nbrCycle.place(x=0.011*self.ecranLargeur, y=0.12*self.ecranHauteur)
+        self.cycle = IntVar()
+        self.nombreCycle = Entry(self.FrameChoixEtude, textvariable=self.cycle, width=10)
+        self.nombreCycle.place(x=0.078*self.ecranLargeur, y=0.16*self.ecranHauteur)
+        
+        choixEtude = Label(self.FrameChoixEtude, text="Choix des etudes : ")
+        choixEtude.place(x=0.011*self.ecranLargeur, y=0.22*self.ecranHauteur)
+        
+        # Choix courbe force de compression sur la duretÃ©
+        self.variableFD = IntVar()
+        self.boutonFD = Checkbutton(self.FrameChoixEtude, text="ForceH/durete",variable = self.variableFD)
+        self.boutonFD.place(x=0.018*self.ecranLargeur, y=0.26*self.ecranHauteur)
+        
+        # Choix courbe force de compression sur la masse
+        self.variableFM = IntVar()
+        self.boutonFM = Checkbutton(self.FrameChoixEtude, text="ForceH/masse",variable = self.variableFM)
+        self.boutonFM.place(x=0.018*self.ecranLargeur, y=0.3*self.ecranHauteur)
+        
+        # Choix courbe force de compression sur l'Ã©paisseur
+        self.variableFE = IntVar()
+        self.boutonFE = Checkbutton(self.FrameChoixEtude, text="ForceH/epaisseur",variable = self.variableFE)
+        self.boutonFE.place(x=0.018*self.ecranLargeur, y=0.34*self.ecranHauteur)
+        
+        self.boutonValidation = Button(self.FrameChoixEtude, text="Validation", command = lambda : self.CreerFrameGraphiquesEtude())
+        self.boutonValidation.place(x=0.16*self.ecranLargeur, y=0.3*self.ecranHauteur)
+        
+        
+    def CreerFrameAnalyse(self) :
+        
+        self.FrameAideEtude = LabelFrame(self.FrameFenetreEtude,text="Parametres",width =0.23*self.ecranLargeur, height =0.34*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameAideEtude .pack_propagate(FALSE)
+        self.FrameAideEtude .place(x=0.01*self.ecranLargeur, y=0.44*self.ecranHauteur)
+        
+        self.boutonDemarreAcqui = Button(self.FrameAideEtude, text="Demarrer l'acquisition",bg = "red", command = lambda : self.recupValForceMax(),state=NORMAL )
+        self.boutonDemarreAcqui.place(x=0.06*self.ecranLargeur, y=0.03*self.ecranHauteur)
+        
+        durete = Label(self.FrameAideEtude, text="Valeur de la durete : ")
+        durete.place(x=0.011*self.ecranLargeur, y=0.1*self.ecranHauteur)
+        self.valDurete = IntVar()
+        self.valueDurete = Entry(self.FrameAideEtude, textvariable=self.valDurete, width=10,state=DISABLED)
+        self.valueDurete.place(x=0.11*self.ecranLargeur, y=0.105*self.ecranHauteur)
+        
+        masse = Label(self.FrameAideEtude, text="Valeur de la masse : ")
+        masse.place(x=0.011*self.ecranLargeur, y=0.2*self.ecranHauteur)
+        self.valMasse = IntVar()
+        self.valueMasse = Entry(self.FrameAideEtude, textvariable=self.valMasse, width=10,state=DISABLED)
+        self.valueMasse.place(x=0.11*self.ecranLargeur, y=0.205*self.ecranHauteur)
+        
+        self.boutonValider = Button(self.FrameAideEtude, text="Valider", command = lambda : self.creerCourbeEtude())
+        self.boutonValider.place(x=0.08*self.ecranLargeur, y=0.26*self.ecranHauteur)
+        
+        self.boutonRestart = Button(self.FrameFenetreEtude, text="Enregistrer", command = lambda : self.demandeEnregistrement())
+        self.boutonRestart.place(x=0.04*self.ecranLargeur, y=0.80*self.ecranHauteur)
+        
+        self.boutonRestart = Button(self.FrameFenetreEtude, text="Recommencer etude", command = lambda : self.doRestartEtude())
+        self.boutonRestart.place(x=0.12*self.ecranLargeur, y=0.80*self.ecranHauteur)
+        
+    def CreerFrameEtudeGraphique(self) :
+        
+        self.FrameEtude = LabelFrame(self.FrameFenetreEtude,text=" Etude",width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameEtude .pack_propagate(FALSE)
+        self.FrameEtude .place(x=0.25*self.ecranLargeur,y=0.01*self.ecranHauteur) 
+    
+    def doRestartEtude(self):
+        del self.valForceCompMax[::] #Liste donnant la force de compression maximale par cycle
+        del self.epaisseur[::] #Liste Ã©paisseur du comprime par cycle
+        del self.moyenneForceComp[::] #Liste donnant la moyenne force compressions tous les x cycles
+        del self.dureteD[::]
+        del self.masseM[::]
+        self.comptUn = 0
+        self.boutonValidation.configure(state=NORMAL)
+        self.boutonDemarreAcqui.configure(background="red")
+        self.boutonDemarreAcqui.configure(state=NORMAL)
+        self.boutonFD.configure(state=NORMAL)
+        self.boutonFM.configure(state=NORMAL)
+        self.boutonFE.configure(state=NORMAL)
+        self.FrameEtude.destroy()
+        self.CreerFrameEtudeGraphique()
+        self.CreerFrameGraphiquesEtude()
+        
+    
+    def CreerFrameGraphiquesEtude(self) :
+
+        if self.boutonFD["state"]==NORMAL :
+             
+            self.listeNom = [self.variableFD,self.variableFM,self.variableFE]
+            self.listeVariable = [self.variableFD.get(),self.variableFM.get(),self.variableFE.get()]
+            self.listeFramesGraphiquesEtude = []
+            self.listeCourbeActiveEtude =[]
+            i=0
+            while i<len(self.listeNom):
+                if self.listeVariable[i]==1 :
+                    self.listeCourbeActiveEtude.append(self.listeNom[i])
+                i+=1
+            print(len(self.listeCourbeActiveEtude))
+           
+
+            nombreCourbes =self.variableFD.get()+self.variableFM.get()+self.variableFE.get()
+    
+            if nombreCourbes==0 :
+                champ_label = Label(self.FrameEtude, text="Veuillez selectionner des courbes")
+                champ_label.pack() 
+                
+            elif nombreCourbes>0 and nombreCourbes<4 : 
+    
+                Compteur=0
+                while Compteur<nombreCourbes:
+                    exec("self.FrameEtude{0}= LabelFrame(self.FrameEtude, text='',width =0.682*self.ecranLargeur, height =0.801*self.ecranHauteur/(nombreCourbes), borderwidth=2, relief=GROOVE)".format(Compteur))
+                    exec("self.FrameEtude{0}.pack_propagate(FALSE)".format(Compteur))
+                    exec("self.FrameEtude{0}.place(x=0*self.ecranLargeur/1280,y=Compteur*(810*self.ecranHauteur/(1024*nombreCourbes)))".format(Compteur))
+                    self.listeFramesGraphiquesEtude.append(eval("self.FrameEtude{0}".format(Compteur)))
+                    Compteur+=1
+                    
+            
+            else : 
+                champ_label = Label(self.FrameEtude, text="Trop de Courbes SelectionnÃ©es")
+                champ_label.pack() 
+            
+            print (self.listeFramesGraphiquesEtude)
+            
+            self.boutonFD.configure(state=DISABLED)
+            self.boutonFM.configure(state=DISABLED)
+            self.boutonFE.configure(state=DISABLED)
+            
+        else :
+            self.boutonFD.configure(state=NORMAL)
+            self.boutonFM.configure(state=NORMAL)
+            self.boutonFE.configure(state=NORMAL)
+    
+    #Creation variable stock donnee
+    
+    
+    #Fonction rÃ©cupÃ©rant la liste force de compression max et Ã©paisseur sur plusieurs cycle
+    def recupValForceMax (self) :
+        try :
+            self.boutonDemarreAcqui.configure(state=DISABLED)
+            self.boutonValidation.configure(state=DISABLED)
+            self.boutonValider.configure(state=NORMAL)
+            self.boutonDemarreAcqui.configure(background="green")
+            self.CreerFrameGraphiquesEtude()
+            self.boutonFD.configure(state=NORMAL)
+            self.boutonFM.configure(state=NORMAL)
+            self.boutonFE.configure(state=NORMAL)
+            i = 0
+            while i<self.cycle.get() :
+                x = self.mesureAIBurstPlusPort1([0,1,2,3],400,0) #on consiÃ©re un cycle dure moins 1 seconde
+                print(i)
+                e = max(x[3])-min([2])
+                m = max(x[0])
+                self.valForceCompMax.append(m)
+                self.epaisseur.append(e)
+                i += 1
+            tkM.showinfo("Information","Veuillez relever la valeur de la durete et de la masse")
+            moyenne = sum(self.valForceCompMax)/len(self.valForceCompMax)
+            self.moyenneForceComp.append(moyenne)
+            self.valueMasse.configure(state=NORMAL)
+            self.valueDurete.configure(state=NORMAL)
+        except u12.U12Exception as errorCode :
+            typeErreurLabjack(errorCode)
+            self.boutonDemarreAcqui.configure(state=NORMAL)
+            self.boutonDemarreAcqui.configure(background="red")
+    
+    def creerCourbeEtude (self) : 
+        i=0
+        self.dureteD.append(self.valueDurete.get())
+        self.masseM.append(self.valueMasse.get())
+        self.boutonValider.configure(state=DISABLED)
+        self.valueDurete.configure(state=DISABLED)
+        self.valueMasse.configure(state=DISABLED)
+        tkM.showinfo("Infomation","Veuillez recommencer une acquisition")
+        taille = 0
+        if (len(self.listeCourbeActiveEtude) == 3):
+            taille = 50
+        else :
+            taille = 80
+        while i<len(self.listeCourbeActiveEtude) :
+            self.boutonDemarreAcqui.configure(state=NORMAL)
+            
+            if self.listeCourbeActiveEtude[i]==self.listeNom[0] :
+                fFD = Figure(figsize=(0.006*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotFD = fFD.add_subplot(111)
+                #self.plotFD.ion()
+                self.plotFD.clear()
+                self.plotFD.set_xlabel('Force de compression(N)')
+                self.plotFD.set_ylabel('Durete ()')
+                self.plotFD.set_title('Aptitude a la durete')
+                #fFD.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fFD, master=self.listeFramesGraphiquesEtude[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if(len(self.dureteD) == len(self.moyenneForceComp)):
+                    #self.aniFD = animation.FuncAnimation(fFD, self.animateFD, interval=100)
+                    #self.plotFD.clear()
+                    self.plotFD.plot(self.moyenneForceComp,self.dureteD,'bs')
+                    #self.plotFD.draw()
+                    print(self.dureteD)
+                #self.plotFD.ioff()
+                i+=1
+
+            if self.listeCourbeActiveEtude[i]==self.listeNom[1] :
+                fFM = Figure(figsize=(0.006*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotFM= fFM.add_subplot(111)
+                #self.plotFM.clf()
+                
+                self.plotFM.set_xlabel('Masse(g)')
+                self.plotFM.set_ylabel('Force de compression (N)')
+                self.plotFM.set_title('Force de compression en fonction de la masse')
+                #fFM.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fFM, master=self.listeFramesGraphiquesEtude[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if(len(self.masseM) == len(self.moyenneForceComp)):
+                    #self.aniFM = animation.FuncAnimation(fFM, self.animateFM, interval=100)
+                    #self.plotFM.clear()
+                    self.plotFM.plot(self.masseM,self.moyenneForceComp,'bs')
+                    #fFM.clf()
+                    #fFM.draw()
+                    #exec("canvas{0}.draw()".format(i))
+               # fFM.ioff()
+                i+=1
+
+            if self.listeCourbeActiveEtude[i]==self.listeNom[2] :
+                fFE = Figure(figsize=(0.006*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotFE = fFE.add_subplot(111)
+                #self.plotFE.ion()
+                self.plotFE.clear()
+                self.plotFE.set_xlabel('Force de compression(N)')
+                self.plotFE.set_ylabel('Epaisseur(mm)')
+                self.plotFE.set_title('Epaisseur en fonction de la force de compression')
+                #fFE.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fFE, master=self.listeFramesGraphiquesEtude[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if(len(self.valForceCompMax) == len(self.epaisseur)):
+                    #self.aniFE = animation.FuncAnimation(fFE, self.animateFE, interval=100)
+                    #self.plotFE.clear()
+                    self.plotFE.plot(self.valForceCompMax,self.epaisseur,'bs')
+                    #self.plotFE.draw()
+                #self.plotFE.ioff()
+                i+=1
+                    
+        # else:
+        #     i=0
+        #     while i<len(self.listeCourbeActiveEtude) :
+        #         self.boutonDemarreAcqui.configure(state=NORMAL)
+        #         
+        #         if self.listeCourbeActiveEtude[i]==self.listeNom[0] :
+        #             #if(len(self.dureteD) == len(self.moyenneForceComp)):
+        #             self.aniFD.event_source.start()
+        #             i+=1
+        #         if self.listeCourbeActiveEtude[i]==self.listeNom[1] :
+        #             #if(len(self.masseM) == len(self.moyenneForceComp)):
+        #             self.aniFM.event_source.start()
+        #             i+=1
+        #         if self.listeCourbeActiveEtude[i]==self.listeNom[2] :
+        #             #if(len(self.valForceCompMax) == len(self.epaisseur)):
+        #             self.aniFE.event_source.start()
+        #             i+=1
+    
+    def animateFD(self,i):              
+        self.plotFD.clear()
+        self.plotFD.grid(True)
+        self.plotFD.set_xlabel('Force de compression(N)')
+        self.plotFD.set_ylabel('Durete ()')
+        self.plotFD.set_title('Aptitude a la durete')
+        if(len(self.dureteD) == len(self.moyenneForceComp)):
+            self.plotFD.plot(self.moyenneForceComp,self.dureteD)
+    
+    def animateFM(self,i):              
+        self.plotFM.clear()
+        self.plotFM.grid(True)
+        self.plotFM.set_xlabel('Masse(g)')
+        self.plotFM.set_ylabel('Force de compression (N)')
+        self.plotFM.set_title('Force de compression en fonction de la masse')
+        if(len(self.masseM) == len(self.moyenneForceComp)):
+            self.plotFM.plot(self.masseM,self.moyenneForceComp)
+    
+    def animateFE(self,i):              
+        self.plotFE.clear()
+        self.plotFE.grid(True)
+        self.plotFE.set_xlabel('Force de compression(N)')
+        self.plotFE.set_ylabel('Epaisseur(mm)')
+        self.plotFE.set_title('Epaisseur en fonction de la force de compression')
+        if(len(self.valForceCompMax) == len(self.epaisseur)):
+            self.plotFE.plot(self.valForceCompMax,self.epaisseur)
+            
+    def demandeEnregistrement(self) :
+        if tkM.askquestion('',"Souhaitez-vous sauvegarder les donnees ?")=="yes":
+            self.EnregistrementDesDonneesEtudes(self.dureteD,self.moyenneForceComp,self.masseM,self.epaisseur)
+            tkM.showwarning('Attention','Changez le nom du comprimÃ© si vous voulez faire une autre acquisition sinon le fichier precedent sera ecrase')
+            
+    def EnregistrementDesDonneesEtudes(self,ListeDurete,ListeForceMoyenne,ListeMasse,ListeEpaisseur):
+         os.chdir("C:\Users\BIOSTAT-Aplus\Documents\Data GI-View\Etude") #MODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDIFIER
+         fichierDonnees = open(self.nameComprime.get()+".txt","w")
+         fichierDonnees.write("Force Compression Moyenne (N);Durete ; Masse (g);Epaisseur (mm) \n")
+         i =0
+         for i in range(len(ListeForceMoyenne)) :
+             fichierDonnees.write("{0};{1};{2};{3}\n".format(ListeForceMoyenne[i],ListeDurete[i],ListeMasse[i],ListeEpaisseur[i]))
+         fichierDonnees.close()
+          
+  
+        
+### 4 Etalonnage   
+       
+        
+    def CreerFrameEtalonnage(self) :
+        
+        if self.CompteurEtalonnage==1:
+            self.FrameFenetreEtal.destroy()
+        
+        self.FrameFenetreEtal  = LabelFrame(fenetre,text="",width=0.95*self.ecranLargeur, height=0.86*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameFenetreEtal.pack_propagate(FALSE)
+        self.FrameFenetreEtal.place (x=0.02*self.ecranLargeur,y=0.1*self.ecranHauteur)
+        
+        self.CreerFrameMotPasse()
+        
+        self.boutonVisualisation.configure(background="red")
+        self.boutonControle.configure(background="red")
+        self.boutonEtude.configure(background="red")
+        self.boutonEtalonnage.configure(background="orange")
+        
+        self.CompteurEtalonnage=1
+        
+    
+    def CreerFrameMotPasse(self):
+        self.FrameMotPasse = LabelFrame (self.FrameFenetreEtal,text="Mot de passe",width =0.23*self.ecranLargeur, height =0.19*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameMotPasse.pack_propagate(FALSE)
+        self.FrameMotPasse.place(x=0.35*self.ecranLargeur, y=0.3*self.ecranHauteur)
+        
+        mot = Label(self.FrameMotPasse, text="Mot de passe")
+        mot.place(x=0.011*self.ecranLargeur, y=0.06*self.ecranHauteur)
+        self.Motdepasse= StringVar()
+        self.mot = Entry(self.FrameMotPasse, textvariable=self.Motdepasse, width=10)
+        self.mot.place(x=0.078*self.ecranLargeur, y=0.06*self.ecranHauteur)
+        
+        self.boutonVal = Button(self.FrameMotPasse, text="Valider", command = lambda : self.verification())
+        self.boutonVal.place(x=0.15*self.ecranLargeur, y=0.06*self.ecranHauteur)
+        
+    def verification(self):
+        if self.Motdepasse.get() == "123":
+            self.CreerFrameEtalonnage1()
+        else: 
+            tkM.showwarning("Resultat","Mot de passe incorrect")
+            self.Motdepasse.set('')
+        
+    def CreerFrameEtalonnage1(self) :
+        
+        self.FrameFenetreEtalonnage  = LabelFrame(fenetre,text="",width=0.95*self.ecranLargeur, height=0.86*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameFenetreEtalonnage.pack_propagate(FALSE)
+        self.FrameFenetreEtalonnage.place (x=0.02*self.ecranLargeur,y=0.1*self.ecranHauteur)
+        
+        self.CreerChoixCapteurEtalonne()
+        self.CreerFrameTutoriel()
+        self.CreerFrameTutoriel1()
+        self.CreerFrameTutoriel2()
+        self.CreerFrameTutoriel3()
+        self.CreerFrameTutoriel4()
+        
+        self.boutonVisualisation.configure(background="red")
+        self.boutonControle.configure(background="red")
+        self.boutonEtude.configure(background="red")
+        self.boutonEtalonnage.configure(background="green")
+        
+    def CreerChoixCapteurEtalonne(self):
+        self.FrameCapteurEtalonne = LabelFrame(self.FrameFenetreEtalonnage, text="Choix du capteur a etalonner",width =0.23*self.ecranLargeur, height =0.825*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameCapteurEtalonne.pack_propagate(FALSE)
+        self.FrameCapteurEtalonne.place(x=0.01*self.ecranLargeur, y=0.01*self.ecranHauteur)
+        
+        depltHaut = Label(self.FrameCapteurEtalonne, text="Etalonner le capteur deplacement haut")
+        depltHaut.place(x=0.011*self.ecranLargeur, y=0.1*self.ecranHauteur)
+        self.boutonCDH = Button(self.FrameCapteurEtalonne, text="Etalonner",bg="red",command = lambda : self.tutoDepltHaut())
+        self.boutonCDH.place(x=0.054*self.ecranLargeur, y=0.15*self.ecranHauteur)
+        
+        depltBas = Label(self.FrameCapteurEtalonne, text="Etalonner le capteur deplacement Bas")
+        depltBas.place(x=0.011*self.ecranLargeur, y=0.25*self.ecranHauteur)
+        self.boutonCDB = Button(self.FrameCapteurEtalonne, text="Etalonner",bg="red",command =lambda : self.tutoDepltBas())
+        self.boutonCDB.place(x=0.054*self.ecranLargeur, y=0.30*self.ecranHauteur)
+        
+        forceHaut = Label(self.FrameCapteurEtalonne, text="Etalonner le capteur force haut")
+        forceHaut.place(x=0.011*self.ecranLargeur, y=0.40*self.ecranHauteur)
+        self.boutonCFH = Button(self.FrameCapteurEtalonne, text="Etalonner",bg="red",command = lambda : self.tutoForHaut())
+        self.boutonCFH.place(x=0.054*self.ecranLargeur, y=0.45*self.ecranHauteur)
+        
+        
+        forceBas = Label(self.FrameCapteurEtalonne, text="Etalonner le capteur force Bas")
+        forceBas.place(x=0.011*self.ecranLargeur, y=0.55*self.ecranHauteur)
+        self.boutonCFB = Button(self.FrameCapteurEtalonne, text="Etalonner",bg="red",command = lambda : self.tutoForBas())
+        self.boutonCFB.place(x=0.054*self.ecranLargeur, y=0.60*self.ecranHauteur)
+
+### 4.1 Tutoriels / Etalonnage
+    
+    def CreerFrameTutoriel(self) :
+        
+        self.FrameTutoriel = LabelFrame(self.FrameFenetreEtalonnage, text="Tutoriel",width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur, borderwidth=2, relief=GROOVE)
+        self.FrameTutoriel.pack_propagate(FALSE)
+        self.FrameTutoriel.place(x=0.25*self.ecranLargeur, y=0.01*self.ecranHauteur)
+ 
+#CrÃ©ation de copie pour avoir dffÃ©rente frame pour les tutoriel de chaque capteur
+
+    def CreerFrameTutoriel1(self) :    
+        self.FrameTutorielDepltHaut = LabelFrame(self.FrameFenetreEtalonnage, text="Tutoriel",width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur, borderwidth=2, relief=GROOVE)
+        self.FrameTutorielDepltHaut.pack_propagate(FALSE)
+        self.FrameTutorielDepltHaut.place(x=0.25*self.ecranLargeur, y=0.01*self.ecranHauteur)
+    
+    def CreerFrameTutoriel2(self) :    
+        self.FrameTutorielDepltBas = LabelFrame(self.FrameFenetreEtalonnage, text="Tutoriel",width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur, borderwidth=2, relief=GROOVE)
+        self.FrameTutorielDepltBas.pack_propagate(FALSE)
+        self.FrameTutorielDepltBas.place(x=0.25*self.ecranLargeur, y=0.01*self.ecranHauteur)
+    
+    def CreerFrameTutoriel3(self) :    
+        self.FrameTutorielForHaut = LabelFrame(self.FrameFenetreEtalonnage, text="Tutoriel",width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur, borderwidth=2, relief=GROOVE)
+        self.FrameTutorielForHaut.pack_propagate(FALSE)
+        self.FrameTutorielForHaut.place(x=0.25*self.ecranLargeur, y=0.01*self.ecranHauteur)
+    
+    def CreerFrameTutoriel4(self) :    
+        self.FrameTutorielForBas = LabelFrame(self.FrameFenetreEtalonnage, text="Tutoriel",width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur, borderwidth=2, relief=GROOVE)
+        self.FrameTutorielForBas .pack_propagate(FALSE)
+        self.FrameTutorielForBas .place(x=0.25*self.ecranLargeur, y=0.01*self.ecranHauteur)
+
+#Tutoriel dÃ©placent haut
+
+    def tutoDepltHaut(self):
+        self.boutonCDH.configure(background="green")
+        self.boutonCDB.configure(background="red")
+        self.boutonCFH.configure(background="red")
+        self.boutonCFB.configure(background="red")
+        self.FrameTutorielDepltBas.destroy()
+        self.FrameTutorielForHaut.destroy()
+        self.FrameTutorielForBas.destroy()
+        self.CreerFrameTutoriel1()
+        self.donneeAcqui1 = []
+        premierPoint = Label(self.FrameTutorielDepltHaut, text = "1 - Placez la premiere plaque de 2 mm sur la matrice")
+        premierPoint.place(x=0.011*self.ecranLargeur, y=0.048*self.ecranHauteur)
+        deuxiemePoint = Label(self.FrameTutorielDepltHaut, text = "2 - Tournez manuelement la roue jusqu'a ce que le poincon du haut entre en contact avec la premiere plaque")
+        deuxiemePoint.place(x=0.011*self.ecranLargeur, y=0.1*self.ecranHauteur)
+        troisiemePoint = Label(self.FrameTutorielDepltHaut, text = "3 - Cliquez sur le bouton enregistrer premiere position")
+        troisiemePoint.place(x=0.011*self.ecranLargeur, y=0.15*self.ecranHauteur)
+        self.enregiPlaqueUne = Button(self.FrameTutorielDepltHaut, text="Enregistrement 1",bg="gray",command = lambda : self.EnregistrementPositionUneDH(),state=DISABLED)
+        self.enregiPlaqueUne.place(x=0.054*self.ecranLargeur, y=0.18*self.ecranHauteur)
+        quatriemePoint = Label(self.FrameTutorielDepltHaut, text = "4 - Remontez le poincon du haut")
+        quatriemePoint.place(x=0.011*self.ecranLargeur, y=0.22*self.ecranHauteur)
+        cinquiemePoint = Label(self.FrameTutorielDepltHaut, text = "5 - Mettre la plaque de 4 mm sur la premiere plaque")
+        cinquiemePoint.place(x=0.011*self.ecranLargeur, y=0.26*self.ecranHauteur)
+        sixiemePoint = Label(self.FrameTutorielDepltHaut, text = "6 - Tournez manuelement la roue jusqu'a ce que le poincon du haut entre en contact avec la deuxieme plaque ")
+        sixiemePoint.place(x=0.011*self.ecranLargeur, y=0.31*self.ecranHauteur)
+        septiemePoint = Label(self.FrameTutorielDepltHaut, text = "7 - Cliquez sur le bouton enregistrer deuxieme position")
+        septiemePoint.place(x=0.011*self.ecranLargeur, y=0.36*self.ecranHauteur)
+        self.enregiPlaqueDeux = Button(self.FrameTutorielDepltHaut, text="Enregistrement 2",bg="gray",command = lambda : self.EnregistrementPositionDeuxDH(),state=DISABLED)
+        self.enregiPlaqueDeux.place(x=0.055*self.ecranLargeur, y=0.39*self.ecranHauteur)
+        huitiemePoint = Label(self.FrameTutorielDepltHaut, text = "8 - VÃ©rifier si la courbe est linÃ©aire")
+        huitiemePoint.place(x=0.011*self.ecranLargeur, y=0.44*self.ecranHauteur)
+        self.checkUn = Button(self.FrameTutorielDepltHaut, text="Check",bg="gray",command = lambda :  self.VerifLineaireDH(),state=DISABLED)
+        self.checkUn.place(x=0.055*self.ecranLargeur, y=0.47*self.ecranHauteur)
+        self.enregiPlaqueUne.configure(state=NORMAL)
+        self.checkUn.configure(state=DISABLED)
+        self.enregiPlaqueDeux.configure(state=DISABLED)
+        
+    
+    def EnregistrementPositionUneDH(self):
+        y = self.mesureAI(2)
+        self.enregiPlaqueDeux.configure(state=NORMAL)
+        self.donneeAcqui1.append(y)
+        return y
+    
+    def EnregistrementPositionDeuxDH(self):
+        y = self.mesureAI(2)
+        self.checkUn.configure(state=NORMAL)
+        self.donneeAcqui1.append(y)
+        return y
+    
+    def VerifLineaireDH(self):
+        x = [2,4] #DÃ©placement en mm
+        y = []    #Tension correspondante
+        a = (self.donneeAcqui1[1]-self.donneeAcqui1[0])/(x[1]-x[0])
+        if a == 0 :
+            c = 1
+        else :
+             c = 1/a
+        b = -c*self.donneeAcqui1[0]+x[0]
+        tkM.showinfo("Information","Equation de la droite : "+str(c)+"x "+str(b))
+        self.enregiPlaqueUne.configure(state=NORMAL)
+        self.checkUn.configure(state=DISABLED)
+        self.enregiPlaqueDeux.configure(state=DISABLED)
+        os.chdir("C:\Users\BIOSTAT-Aplus\Documents\Data GI-View\Etalonnage") #MODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDIFIER
+        fichierDonnees = open("Etlonnage_Deplecement_Haut.txt","a")
+        fichierDonnees.write("Coefficient transformation \n")
+        fichierDonnees.write("{0}\n{1}".format(c,b))
+        fichierDonnees.close()
+        return c
+
+#Tutoriel dÃ©placent bas
+
+    def tutoDepltBas(self):
+        self.boutonCDH.configure(background="red")
+        self.boutonCDB.configure(background="green")
+        self.boutonCFH.configure(background="red")
+        self.boutonCFB.configure(background="red")
+        self.FrameTutorielDepltHaut.destroy()
+        self.FrameTutorielForHaut.destroy()
+        self.FrameTutorielForBas.destroy()
+        self.CreerFrameTutoriel2()
+        self.donneeAcqui2 = []
+        premierPoint = Label(self.FrameTutorielDepltBas, text = "1 - Placez la premiere plaque de 4 mm sur la matrice")
+        premierPoint.place(x=0.011*self.ecranLargeur, y=0.05*self.ecranHauteur)
+        deuxiemePoint = Label(self.FrameTutorielDepltBas, text = "2 - Tournez manuelement la roue jusqu'a ce que le poincon du haut entre en contact avec la premiere plaque")
+        deuxiemePoint.place(x=0.011*self.ecranLargeur, y=0.1*self.ecranHauteur)
+        troisiemePoint = Label(self.FrameTutorielDepltBas, text = "3 - Cliquez sur le bouton enregistrer premiere position")
+        troisiemePoint.place(x=0.011*self.ecranLargeur, y=0.15*self.ecranHauteur)
+        self.enregiPlaqueUneBas = Button(self.FrameTutorielDepltBas, text="Enregistrement 1",bg="gray",command = lambda : self.EnregistrementPositionUneDB())
+        self.enregiPlaqueUneBas.place(x=0.055*self.ecranLargeur, y=0.18*self.ecranHauteur)
+        quatriemePoint = Label(self.FrameTutorielDepltBas, text = "4 - Remontez le poincon du haut")
+        quatriemePoint.place(x=0.011*self.ecranLargeur, y=0.22*self.ecranHauteur)
+        cinquiemePoint = Label(self.FrameTutorielDepltBas, text = "5 - Posez la cale etalon dans la matrice")
+        cinquiemePoint.place(x=0.011*self.ecranLargeur, y=0.26*self.ecranHauteur)
+        sixiemePoint = Label(self.FrameTutorielDepltBas, text = "6 - Tournez manuelement la roue jusqu'a ce que le poincon du haut entre en contact avec la deuxieme plaque ")
+        sixiemePoint.place(x=0.011*self.ecranLargeur, y=0.31*self.ecranHauteur)
+        septiemePoint = Label(self.FrameTutorielDepltBas, text = "7 - Cliquez sur le bouton enregistrer deuxieme position")
+        septiemePoint.place(x=0.011*self.ecranLargeur, y=0.36*self.ecranHauteur)
+        self.enregiPlaqueDeuxDB = Button(self.FrameTutorielDepltBas, text="Enregistrement 2",bg="gray",command = lambda : self.EnregistrementPositionDeuxDB(),state=DISABLED)
+        self.enregiPlaqueDeuxDB.place(x=0.055*self.ecranLargeur, y=0.39*self.ecranHauteur)
+        huitiemePoint = Label(self.FrameTutorielDepltBas, text = "8 - VÃ©rifier si la courbe est linÃ©aire")
+        huitiemePoint.place(x=0.011*self.ecranLargeur, y=0.44*self.ecranHauteur)
+        self.checkDeux = Button(self.FrameTutorielDepltBas, text="Check",bg="gray",command = lambda : self.VerifLineaireDB())
+        self.checkDeux.place(x=0.055*self.ecranLargeur, y=0.47*self.ecranHauteur)
+        self.enregiPlaqueUneBas.configure(state=NORMAL)
+        self.checkDeux.configure(state=DISABLED)
+        self.enregiPlaqueDeuxDB.configure(state=DISABLED)
+        
+    def EnregistrementPositionUneDB(self):
+        y = self.mesureAI(3)
+        self.enregiPlaqueDeuxDB.configure(state=NORMAL)
+        self.donneeAcqui2.append(y)
+        return y
+    
+    def EnregistrementPositionDeuxDB(self):
+        y = self.mesureAI(3)
+        self.checkDeux.configure(state=NORMAL)
+        self.donneeAcqui2.append(y)
+        return y
+    
+    def VerifLineaireDB(self):
+        x = [0,-15] #DÃ©placement en mm
+        y = []    #Tension correspondante
+        a = (self.donneeAcqui2[1]-self.donneeAcqui2[0])/(x[1])
+        print(self.donneeAcqui2[1],self.donneeAcqui2[0],x[1],a)
+        if a == 0 :
+            c = 1
+        else :
+             c = 1/a
+        b = c*self.donneeAcqui2[0]+x[0]
+        tkM.showinfo("Information","Equation de la droite : "+str(c)+"x + "+str(b))
+        self.enregiPlaqueUneBas.configure(state=NORMAL)
+        self.checkDeux.configure(state=DISABLED)
+        self.enregiPlaqueDeuxDB.configure(state=DISABLED)
+        os.chdir("C:\Users\BIOSTAT-Aplus\Documents\Data GI-View\Etalonnage") #MODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDIFIER
+        fichierDonnees = open("Etlonnage_Deplacement_Bas.txt","a")
+        fichierDonnees.write("Coefficient transformation \n")
+        fichierDonnees.write("{0}\n{1}".format(c,b))
+        fichierDonnees.close()
+        return c
+
+#Tutoriel force haut
+
+    def tutoForHaut(self):
+        self.boutonCDH.configure(background="red")
+        self.boutonCDB.configure(background="red")
+        self.boutonCFH.configure(background="green")
+        self.boutonCFB.configure(background="red")
+        self.FrameTutorielDepltBas.destroy()
+        self.FrameTutorielDepltHaut.destroy()
+        self.FrameTutorielForBas.destroy()
+        self.CreerFrameTutoriel3()
+        premierPoint = Label(self.FrameTutorielForHaut, text = "Voir notice d'etalonnage")
+        premierPoint.place(x=0.011*self.ecranLargeur, y=0.048*self.ecranHauteur)
+
+#Tutoriel force bas
+
+    def tutoForBas(self):
+        self.boutonCDH.configure(background="red")
+        self.boutonCDB.configure(background="red")
+        self.boutonCFH.configure(background="red")
+        self.boutonCFB.configure(background="green")
+        self.FrameTutorielDepltBas.destroy()
+        self.FrameTutorielDepltHaut.destroy()
+        self.FrameTutorielForHaut.destroy()
+        self.CreerFrameTutoriel4()
+        premierPoint = Label(self.FrameTutorielForBas, text = "Voir notice d'etalonnage")
+        premierPoint.place(x=0.011*self.ecranLargeur, y=0.048*self.ecranHauteur)
+        Textesix = Label(self.FrameTutorielForBas, text="Entree la valeur S de l amplificateur : ")
+        Textesix.place(x=0.011*self.ecranLargeur, y=0.1*self.ecranHauteur)
+        self.valEtal = IntVar()
+        self.valueEtal = Entry(self.FrameTutorielForBas, textvariable=self.valEtal, width=10,state=NORMAL)
+        self.valueEtal.place(x=0.20*self.ecranLargeur, y=0.1*self.ecranHauteur)
+        self.boutonValidationO = Button(self.FrameTutorielForBas, text="Validation", command = lambda : self.Enregist())
+        self.boutonValidationO.place(x=0.25*self.ecranLargeur, y=0.1*self.ecranHauteur)
+        
+    def Enregist(self) :
+        valEtal = self.valEtal.get()
+        os.chdir("C:\Users\BIOSTAT-Aplus\Documents\Data GI-View\Etalonnage") #MODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDIFIER
+        fichierDonnees = open("Etlonnage_Force_Bas.txt","a")
+        fichierDonnees.write("ValEtalonnage \n")
+        fichierDonnees.write("{0}".format(valEtal))
+        fichierDonnees.close()
+        
+
+    
+### 5 Visualisation Acquisition
+
+
+    def CreerFrameVisualisation(self) :
+        
+        if self.CompteurVisualisation==0 :
+            self.FrameFenetre  = LabelFrame(fenetre,text="",width=0.95*self.ecranLargeur, height=0.86*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+            self.FrameFenetre.pack_propagate(FALSE)
+            self.FrameFenetre.place (x=0.02*self.ecranLargeur,y=0.1*self.ecranHauteur)
+            
+            self.CreerFrameTempsReel()
+            self.CreerFrameAcquisition()
+            self.CreerFrameCourbe()
+            self.CreerFrameGraphique()
+            
+            
+            
+            self.CompteurVisualisation=1
+        
+        else:
+            self.FrameFenetre.tkraise()
+        
+        self.boutonVisualisation.configure(background="green")
+        self.boutonControle.configure(background="red")
+        self.boutonEtude.configure(background="red")
+        self.boutonEtalonnage.configure(background="red")
+### 5.1 Choix des rÃ©glages / Visualisation Acquisition    
+            
+    def CreerFrameTempsReel(self) :
+        
+        self.FrameTempsReel = LabelFrame(self.FrameFenetre,text="Temps RÃ©el",width =0.23*self.ecranLargeur, height =0.12*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameTempsReel.pack_propagate(FALSE)
+        self.FrameTempsReel.place(x=0.01*self.ecranLargeur, y=0.01*self.ecranHauteur)
+        self.compt = 0
+        self.boutonPlay = Button(self.FrameTempsReel, text="PLAY", command = lambda : self.TempsReel(), state=DISABLED)
+        self.boutonPlay.place(x=0.023*self.ecranLargeur, y=0.03*self.ecranHauteur)
+        
+        self.boutonStop = Button(self.FrameTempsReel, text="STOP", command = lambda:self.Stop(), state=DISABLED)
+        self.boutonStop.place(x=0.094*self.ecranLargeur, y=0.03*self.ecranHauteur)
+        
+        boutonResetAcquisition = Button(self.FrameTempsReel, text="RESET", command = lambda : self.effacerTempReel())
+        boutonResetAcquisition.place(x=0.16*self.ecranLargeur, y=0.03*self.ecranHauteur)
+    
+    def CreerFrameAcquisition(self) :
+        
+        self.FrameAcquisition = LabelFrame (self.FrameFenetre,text="Acquisition",width =0.23*self.ecranLargeur, height =0.29*self.ecranHauteur,borderwidth=2, relief=GROOVE)
+        self.FrameAcquisition.pack_propagate(FALSE)
+        self.FrameAcquisition.place(x=0.01*self.ecranLargeur, y=0.14*self.ecranHauteur)
+        
+        temps1 = Label(self.FrameAcquisition, text="Intervalle de temps : ")
+        temps1.place(x=0.01*self.ecranLargeur, y=0.1*self.ecranHauteur)
+        
+        tempsDebut = Label(self.FrameAcquisition, text="Debut :")
+        tempsDebut.place(x=0.012*self.ecranLargeur, y=0.14*self.ecranHauteur)
+        self.tempsDebutAct = IntVar()
+        self.ligne_texte = Entry(self.FrameAcquisition, textvariable=self.tempsDebutAct, width=10)
+        self.ligne_texte.place(x=0.047*self.ecranLargeur, y=0.14*self.ecranHauteur)
+        
+        tempsFin = Label(self.FrameAcquisition, text="Fin :")
+        tempsFin.place(x=0.1*self.ecranLargeur, y=0.14*self.ecranHauteur)
+        self.tempsFinAct = IntVar()
+        self.ligne_texte2 = Entry(self.FrameAcquisition, textvariable=self.tempsFinAct, width=10)
+        self.ligne_texte2.place(x=0.14*self.ecranLargeur, y=0.14*self.ecranHauteur)
+        
+        enregist = Label(self.FrameAcquisition, text="Enregistrement des mesures : ")
+        enregist.place(x=0.012*self.ecranLargeur, y=0.01*self.ecranHauteur)
+        
+        nomEnregist = Label(self.FrameAcquisition, text="Nom :")
+        nomEnregist.place(x=0.012*self.ecranLargeur, y=0.049*self.ecranHauteur)
+        self.nEnreg = StringVar()
+        self.ligne_texte3 = Entry(self.FrameAcquisition, textvariable=self.nEnreg, width=10)
+        self.ligne_texte3.place(x=0.047*self.ecranLargeur, y=0.049*self.ecranHauteur)
+        self.variableDonnee = IntVar()
+        self.boutonDonnee= Checkbutton(self.FrameAcquisition, text="DonnÃ©es",bg="white",offvalue = 1,variable = self.variableDonnee)
+        self.boutonDonnee.place(x=0.125*self.ecranLargeur, y=0.049*self.ecranHauteur)
+        self.boutonDonnee.select()
+        
+        self.boutonRec= Button(self.FrameAcquisition, text="REC", command = lambda : self.CreerPlot(), state=DISABLED)
+        self.boutonRec.place(x=0.093*self.ecranLargeur, y=0.2*self.ecranHauteur)
+                
+        boutonValidationAcquisition = Button(self.FrameAcquisition, text="Validation", command = lambda : self.ValidationReglageRec())
+        boutonValidationAcquisition.place(x=0.012*self.ecranLargeur, y=0.2*self.ecranHauteur)
+        
+        boutonResetAcquisition = Button(self.FrameAcquisition, text="Reset", command = lambda : self.effacerAcqui())
+        boutonResetAcquisition.place(x=0.15*self.ecranLargeur, y=0.2*self.ecranHauteur)
+
+    def CreerFrameCourbe(self) :
+        
+        FrameCourbe = LabelFrame(self.FrameFenetre, text="Choix des courbes",width =0.23*self.ecranLargeur, height =0.4*self.ecranHauteur , borderwidth=2, relief=GROOVE)
+        FrameCourbe.pack_propagate(FALSE)
+        FrameCourbe.place(x=0.01*self.ecranLargeur,y=0.44*self.ecranHauteur)
+        
+        self.variableFHFB = IntVar()
+        self.boutonFHFB= Checkbutton(FrameCourbe, text="ForceH&ForceB/temps",variable = self.variableFHFB)
+        self.boutonFHFB.place(x=0.01*self.ecranLargeur, y=0.02*self.ecranHauteur)
+        
+        self.variableDHDB = IntVar()
+        self.boutonDHDB= Checkbutton(FrameCourbe, text="DeplH&DeplB/temps",variable = self.variableDHDB)
+        self.boutonDHDB.place(x=0.01*self.ecranLargeur, y=0.07*self.ecranHauteur)
+        
+        self.variableDH = IntVar()
+        self.boutonDH= Checkbutton(FrameCourbe, text="DeplH/temps",variable = self.variableDH)
+        self.boutonDH.place(x=0.01*self.ecranLargeur, y=0.12*self.ecranHauteur)
+        
+        self.variableDB = IntVar()
+        self.boutonDB= Checkbutton(FrameCourbe, text="DeplB/temps",variable = self.variableDB)
+        self.boutonDB.place(x=0.01*self.ecranLargeur, y=0.17*self.ecranHauteur)
+        
+        self.variableHB = IntVar()
+        self.boutonHB= Checkbutton(FrameCourbe, text="DeplH-DeplB/temps",variable = self.variableHB)
+        self.boutonHB.place(x=0.01*self.ecranLargeur, y=0.22*self.ecranHauteur)
+        
+        self.variableVH = IntVar()
+        self.boutonVH= Checkbutton(FrameCourbe, text="VitdeplH/temps",variable = self.variableVH)
+        self.boutonVH.place(x=0.01*self.ecranLargeur, y=0.27*self.ecranHauteur)
+        
+        self.variableVB = IntVar()
+        self.boutonVB= Checkbutton(FrameCourbe, text="VitEjection/temps",variable = self.variableVB)
+        self.boutonVB.place(x=0.01*self.ecranLargeur, y=0.32*self.ecranHauteur)
+        
+        boutonValidationCourbe = Button(FrameCourbe, text="Validation", command = lambda : self.CreerFrameGraphiques())
+        boutonValidationCourbe.place(x=0.16*self.ecranLargeur, y=0.17*self.ecranHauteur)
+        
+        
+        
+    def CreerFrameGraphique(self) :
+        
+        self.FrameGraphique = LabelFrame(self.FrameFenetre, text="Graphique",width =0.685*self.ecranLargeur, height =0.825*self.ecranHauteur, borderwidth=2, relief=GROOVE)
+        self.FrameGraphique.pack_propagate(FALSE)
+        self.FrameGraphique.place(x=0.25*self.ecranLargeur,y=0.01*self.ecranHauteur)
+
+### 5.2 Acquisition / Visualisation Acquisition 
+
+    
+    def CreerFrameGraphiques(self) :
+        
+        # if self.boutonPeriode["state"]==DISABLED and self.boutonFB["state"]==DISABLED :
+        #     self.boutonRec.configure(state=DISABLED)
+            
+        if self.boutonHB["state"]==NORMAL :
+             
+            self.listeCompleteNom = [self.variableDH,self.variableDB,self.variableHB,self.variableVH,self.variableVB,self.variableFHFB,self.variableDHDB]
+            self.listeCompleteVariable = [self.variableDH.get(),self.variableDB.get(),self.variableHB.get(),self.variableVH.get(),self.variableVB.get(),self.variableFHFB.get(),self.variableDHDB.get()]
+            self.listeFramesGraphiques = []
+            self.listeCourbeActive =[]
+            i=0
+            while i<len(self.listeCompleteNom):
+                if self.listeCompleteVariable[i]==1 :
+                    self.listeCourbeActive.append(self.listeCompleteNom[i])
+                i+=1
+            print(len(self.listeCourbeActive))
+           
+
+            nombreCourbes =self.variableDH.get()+self.variableDB.get()+self.variableHB.get()+self.variableVH.get()+self.variableVB.get()+self.variableFHFB.get()+self.variableDHDB.get()
+    
+            print (self.variableDH.get())
+            print (self.variableDB.get())
+            print (self.variableVB.get())
+            
+            
+            if nombreCourbes==0 :
+                champ_label = Label(self.FrameGraphique, text="Veuillez selectionner des courbes")
+                champ_label.pack() 
+                
+            elif nombreCourbes>0 and nombreCourbes<2 : 
+    
+                Compteur=0
+                while Compteur<nombreCourbes:
+                    exec("self.FrameGraphique{0}= LabelFrame(self.FrameGraphique, text='',width =0.682*self.ecranLargeur, height =0.801*self.ecranHauteur, borderwidth=2, relief=GROOVE)".format(Compteur))
+                    exec("self.FrameGraphique{0}.pack_propagate(FALSE)".format(Compteur))
+                    exec("self.FrameGraphique{0}.place(x=0*self.ecranLargeur/1280,y=Compteur*(810*self.ecranHauteur/(1024*nombreCourbes)))".format(Compteur))
+                    self.listeFramesGraphiques.append(eval("self.FrameGraphique{0}".format(Compteur)))
+                    Compteur+=1
+                    
+            
+            else : 
+                champ_label = Label(self.FrameGraphique, text="Trop de Courbes SelectionnÃ©es")
+                champ_label.pack() 
+            
+            print (self.listeFramesGraphiques)
+            
+            self.boutonDH.configure(state=DISABLED)
+            self.boutonDB.configure(state=DISABLED)
+            self.boutonHB.configure(state=DISABLED)
+            self.boutonVH.configure(state=DISABLED)
+            self.boutonVB.configure(state=DISABLED)
+            self.boutonFHFB.configure(state=DISABLED)
+            self.boutonDHDB.configure(state=DISABLED)
+            self.boutonPlay.configure(state=NORMAL)
+            self.boutonStop.configure(state=NORMAL)
+            
+            # if (self.boutonPeriode["state"]== DISABLED) :
+            #     self.boutonRec.configure(state=NORMAL)
+            
+        else :
+            self.boutonDH.configure(state=NORMAL)
+            self.boutonDB.configure(state=NORMAL)
+            self.boutonHB.configure(state=NORMAL)
+            self.boutonVH.configure(state=NORMAL)
+            self.boutonVB.configure(state=NORMAL)
+            self.boutonFHFB.configure(state=NORMAL)
+            self.boutonDHDB.configure(state=NORMAL)
+            self.boutonPlay.configure(state=DISABLED)
+            self.boutonStop.configure(state=DISABLED)
+            
+    
+    def ValidationReglageRec(self) :
+        
+        self.boutonRec.configure(state=NORMAL)
+        
+        if (self.ligne_texte["state"]==NORMAL) : 
+            self.ligne_texte.configure(state=DISABLED)
+            self.ligne_texte2.configure(state=DISABLED)
+            #self.boutonPeriode.configure(state=DISABLED)
+            self.boutonDonnee.configure(state=DISABLED)
+            self.boutonHB.configure(state=DISABLED)
+            
+            #if (self.boutonFH["state"]== DISABLED) :
+                #self.boutonRec.configure(state=NORMAL)
+            
+        else : 
+            self.ligne_texte.configure(state=NORMAL)
+            self.ligne_texte2.configure(state=NORMAL)
+            self.boutonRec.configure(state=DISABLED)
+            self.boutonPeriode.configure(state=NORMAL)
+            self.boutonDonnee.configure(state=NORMAL)
+    
+    def effacerAcqui(self):
+        self.FrameGraphique.destroy()
+        self.CreerFrameGraphique()
+        self.CreerFrameGraphiques()
+        self.ligne_texte.configure(state=NORMAL)
+        self.ligne_texte2.configure(state=NORMAL)
+    
+    def effacerTempReel(self):
+        self.FrameGraphique.destroy()
+        self.CreerFrameGraphique()
+        self.CreerFrameGraphiques()
+        self.boutonPlay.configure(state=NORMAL)
+        self.compt = 0
+
+    def CreerPlot(self) :
+        
+        try :
+            x = self.acquisitionTempsAIburstPort(self.tempsDebutAct.get(),self.tempsFinAct.get(),[0,1,2,3],400)
+            print self.variableDonnee.get()
+                
+            i=0
+            taille = 0
+            if (len(self.listeCourbeActive) == 2):
+                taille = 50
+            else :
+                taille = 85
+            if self.listeCourbeActive[i]==self.listeCompleteNom[0] :
+                f = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                a = f.add_subplot(111)
+                a.set_xlabel('Temps(s)')
+                a.set_ylabel('Deplacement (mm)')
+                a.set_title('Deplacement du poincon haut en fonction du temps')
+                a.grid(True)
+                #a.plot([1,2,3,4,5,6,7,8],[9,5,3,2,4,7,6,3])
+                a.plot(x[0],x[3])
+                exec("canvas{0} = FigureCanvasTkAgg(f, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if( self.listeCourbeActive <= 2 and i <= 1 ) :
+                    i+=1
+    
+            if self.listeCourbeActive[i]==self.listeCompleteNom[1] :
+                f = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                a = f.add_subplot(111)
+                a.set_xlabel('Temps(s)')
+                a.set_ylabel('Deplacement (mm)')
+                a.set_title('Deplacement du poincon bas en fonction du temps')
+                a.grid(True)
+                #a.plot([1,2,3,4,5,6,7,8],[5,5,9,4,6,1,3,8])
+                a.plot(x[0],x[4])
+                exec("canvas{0} = FigureCanvasTkAgg(f, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if( self.listeCourbeActive <= 2 and i <= 1 ) :
+                    i+=1
+            
+            if self.listeCourbeActive[i]==self.listeCompleteNom[2] :
+                f = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                a = f.add_subplot(111)
+                a.set_xlabel('Temps(s)')
+                a.set_ylabel('Difference de deplacement des poincons (mm)')
+                a.set_title(' Difference de deplacement des poincons en fonction du temps')
+                a.grid(True)
+                #a.plot([1,2,3,4,5,6,7,8],[1,3,2,9,4,5,9,1])
+                y = []
+                for j in range(len(x[0])):
+                    y.append(x[3][i]-x[4][i])
+                a.plot(x[0],y)
+                exec("self.canvas{0} = FigureCanvasTkAgg(f, master=self.listeFramesGraphiques[i])".format(i))
+                exec("self.canvas{0} .show()".format(i))
+                exec("self.canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if( self.listeCourbeActive <= 2 and i <= 1 ) :
+                    i+=1
+            
+            if self.listeCourbeActive[i]==self.listeCompleteNom[3] :
+                f = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                a = f.add_subplot(111)
+                a.set_xlabel('Temps(s)')
+                a.set_ylabel('Vitesse deplacement poincon haut (mm/s)')
+                a.set_title('Vitesse deplacement poincon haut en fonction du temps')
+                a.grid(True)
+                #a.plot([1,2,3,4,5,6,7,8],[1,3,2,9,4,5,9,1])
+                y = []
+                y.append(0)
+                for j in range(len(x[0])-1):
+                    y.append(x[3][j+1]/(x[0][j+1]-x[0][j]))
+                a.plot(x[0],y)
+                exec("self.canvas{0} = FigureCanvasTkAgg(f, master=self.listeFramesGraphiques[i])".format(i))
+                exec("self.canvas{0} .show()".format(i))
+                exec("self.canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if( self.listeCourbeActive <= 2 and i <= 1 ) :
+                    i+=1
+            
+            if self.listeCourbeActive[i]==self.listeCompleteNom[4] :
+                f = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                a = f.add_subplot(111)
+                a.set_xlabel('Temps(s)')
+                a.set_ylabel('Vitesse d ejection (mm/s)')
+                a.set_title('Vitesse d ejection en fonction du temps')
+                a.grid(True)
+                #a.plot([1,2,3,4,5,6,7,8],[1,3,2,9,4,5,9,1])
+                y = []
+                y.append(0)
+                for j in range(len(x[0])-1):
+                    y.append(x[4][j+1]/(x[0][j+1]-x[0][j]))
+                a.plot(x[0],y)
+                exec("self.canvas{0} = FigureCanvasTkAgg(f, master=self.listeFramesGraphiques[i])".format(i))
+                exec("self.canvas{0} .show()".format(i))
+                exec("self.canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if( self.listeCourbeActive <= 2 and i <= 1 ) :
+                    i+=1
+                
+            if self.listeCourbeActive[i]==self.listeCompleteNom[5] :
+                f = Figure(figsize=(0.006*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                a = f.add_subplot(111)
+                a.set_xlabel('Temps(s)')
+                a.set_ylabel('Force (N)')
+                a.set_title('Force haut et bas en fonction du temps')
+                a.grid(True)
+                #a.plot([1,2,3,4,5,6,7,8],[5,5,9,4,6,1,3,8])
+                a.plot(x[0],x[1])
+                a.plot(x[0],x[2])
+                a.legend(['Force haut','Force bas'],loc='upper right')
+                exec("canvas{0} = FigureCanvasTkAgg(f, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if( self.listeCourbeActive <= 2 and i <= 1 ) :
+                    i+=1
+                
+            if self.listeCourbeActive[i]==self.listeCompleteNom[6] :
+                f = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                a = f.add_subplot(111)
+                a.set_xlabel('Temps(s)')
+                a.set_ylabel('Deplacement (mm)')
+                a.set_title('Deplacment haut et bas en fonction du temps')
+                a.grid(True)
+                #a.plot([1,2,3,4,5,6,7,8],[5,5,9,4,6,1,3,8])
+                a.plot(x[0],x[3])
+                a.plot(x[0],x[4])
+                a.legend(['Deplacecement haut','Deplacement bas'],loc='upper right')
+                exec("canvas{0} = FigureCanvasTkAgg(f, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                if( self.listeCourbeActive <= 2 and i <= 1 ) :
+                    i+=1
+            if (self.variableDonnee.get()==1) :
+                if tkM.askquestion('',"Souhaitez-vous sauvegarder les donnees ?")=="yes":
+                    self.EnregistrementDesDonnees(x[0],x[1],x[2],x[3],x[4])
+                    tkM.showwarning('Attention','Changez le nom du fichier si vous voulez faire une autre acquisition sinon le fichier precedent sera ecrase')
+        except u12.U12Exception as errorCode :
+            typeErreurLabjack(errorCode)
+            
+            
+    def EnregistrementDesDonnees(self,ListeTemps,ListeDeplacementHaut,ListeDeplacementBas,ListeForceHaut,ListeForceBas):
+    
+         os.chdir("C:\Users\BIOSTAT-Aplus\Documents\Data GI-View\Acquisition") #MODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDIFIER
+         fichierDonnees = open(self.nEnreg.get()+".txt","w")
+         fichierDonnees.write("Temps(s);Force Haut;Force Bas;DÃ©placement Haut;DÃ©placement Bas \n")
+         i =0
+         for i in range(len(ListeTemps)) :
+             fichierDonnees.write("{0};{1};{2};{3};{4}\n".format(ListeTemps[i],ListeDeplacementHaut[i],ListeDeplacementBas[i],ListeForceHaut[i],ListeForceBas[i]))
+         fichierDonnees.close()
+
+### 5.3 Visualisation / Visualisation Acquisition 
+    def Stop(self) :
+        self.boutonStop.configure(state=DISABLED)
+        self.boutonPlay.configure(state=NORMAL)
+        i=0
+        while i<len(self.listeCourbeActive) :
+
+            if self.listeCourbeActive[i]==self.listeCompleteNom[0] :
+                self.aniDH.event_source.stop()
+                i+=1
+                
+            if self.listeCourbeActive[i]==self.listeCompleteNom[1] :
+                self.aniDB.event_source.stop()
+                i+=1
+            if self.listeCourbeActive[i]==self.listeCompleteNom[2] :
+                self.aniHB.event_source.stop()
+                i+=1
+            if self.listeCourbeActive[i]==self.listeCompleteNom[3] :
+                self.aniVH.event_source.stop()
+                i+=1
+            if self.listeCourbeActive[i]==self.listeCompleteNom[4] :
+                self.aniVB.event_source.stop()
+                i+=1
+            if self.listeCourbeActive[i]==self.listeCompleteNom[5] :
+                self.aniFHFB.event_source.stop()
+                i+=1
+            if self.listeCourbeActive[i]==self.listeCompleteNom[6] :
+                self.aniDHDB.event_source.stop()
+                i+=1
+
+    def TempsReel(self) :
+        self.boutonPlay.configure(state=DISABLED)
+        taille = 0
+        if (len(self.listeCourbeActive) == 2):
+            taille = 50
+        else :
+            taille = 85
+        if self.compt == 0:
+            self.compt +=1
+            print(len(self.listeCourbeActive))
+            i=0
+            if self.listeCourbeActive[i]==self.listeCompleteNom[0] :
+                fDH = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotDH = fDH.add_subplot(111)
+                self.plotDH.set_xlabel('Temps(s)')
+                self.plotDH.set_ylabel('Deplacements (mm)')
+                self.plotDH.set_title('Deplacement du poincon haut en fonction du temps')
+                fDH.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fDH, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                self.mesureDH = []
+                self.tempsDH = []
+                self.comptErreurDH = 0
+                self.aniDH = animation.FuncAnimation(fDH, self.animateDH, interval=100)
+                i+=1
+                
+                
+            if self.listeCourbeActive[i]==self.listeCompleteNom[1] :
+                fDB = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotDB = fDB.add_subplot(111)
+                self.plotDB.set_xlabel('Temps(s)')
+                self.plotDB.set_ylabel('Deplacements (mm)')
+                self.plotDB.set_title('Deplacement du poincon bas en fonction du temps')
+                fDB.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fDB, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                self.mesureDB = []
+                self.tempsDB = []
+                self.comptErreurDB = 0
+                self.aniDB = animation.FuncAnimation(fDB, self.animateDB, interval=100)
+                i+=1
+            
+            if self.listeCourbeActive[i]==self.listeCompleteNom[2] :
+                fHB = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotHB = fHB.add_subplot(111)
+                self.plotHB.set_xlabel('Temps(s)')
+                self.plotHB.set_ylabel('Deplacements (mm)')
+                self.plotHB.set_title('Difference de deplacement des poincons haut et bas en fonction du temps')
+                fHB.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fHB, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                self.mesureHBH = []
+                self.mesureHBB = []
+                self.y = []
+                self.tempsHB = []
+                self.comptErreurHB = 0
+                self.aniHB = animation.FuncAnimation(fHB, self.animateHB, interval=100)
+                i+=1
+                
+            if self.listeCourbeActive[i]==self.listeCompleteNom[3] :
+                fVH = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotVH = fVH.add_subplot(111)
+                self.plotVH.set_xlabel('Temps(s)')
+                self.plotVH.set_ylabel('Vitesse (mm/s)')
+                self.plotVH.set_title('Vitesse du poincon haut en fonction du temps')
+                fVH.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fVH, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                self.mesureVH = []
+                self.u = []
+                self.tempsVH = []
+                self.comptErreurVH = 0
+                self.aniVH = animation.FuncAnimation(fVH, self.animateVH, interval=100)
+                i+=1
+                
+            if self.listeCourbeActive[i]==self.listeCompleteNom[4] :
+                fVB = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotVB = fVB.add_subplot(111)
+                self.plotVB.set_xlabel('Temps(s)')
+                self.plotVB.set_ylabel('Vitesse (mm/s)')
+                self.plotVB.set_title('Vitesse d ejection du poincon bas en fonction du temps')
+                fVB.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fVB, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                self.mesureVB = []
+                self.t = []
+                self.tempsVB = []
+                self.comptErreurVB = 0
+                self.aniVB = animation.FuncAnimation(fVB, self.animateVB, interval=100)
+                i+=1
+            
+            if self.listeCourbeActive[i]==self.listeCompleteNom[5] :
+                fFHFB = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotFHFB = fFHFB.add_subplot(111)
+                self.plotFHFB.set_xlabel('Temps(s)')
+                self.plotFHFB.set_ylabel('Force (N)')
+                self.plotFHFB.set_title('Force compression du poincon haut et bas en fonction du temps')
+                fFHFB.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fFHFB, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                self.mesureFHFBH = []
+                self.mesureFHFBB = []
+                self.tempsFHFB = []
+                self.comptErreurFHFB = 0
+                self.aniFHFB = animation.FuncAnimation(fFHFB, self.animateFHFB, interval=100)
+                i+=1
+            
+            if self.listeCourbeActive[i]==self.listeCompleteNom[6] :
+                fDHDB = Figure(figsize=(0.0060*self.ecranLargeur,0.0063*self.ecranHauteur), dpi=taille )
+                self.plotDHDB = fDHDB.add_subplot(111)
+                self.plotDHDB.set_xlabel('Temps(s)')
+                self.plotDHDB.set_ylabel('Deplacements (mm)')
+                self.plotDHDB.set_title('Deplacement du poincon haut et bas en fonction du temps')
+                fDHDB.tight_layout()
+                exec("canvas{0} = FigureCanvasTkAgg(fDHDB, master=self.listeFramesGraphiques[i])".format(i))
+                exec("canvas{0} .show()".format(i))
+                exec("canvas{0} .get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)".format(i))
+                self.mesureDHDBH = []
+                self.mesureDHDBB = []
+                self.tempsDHDB = []
+                self.comptErreurDHDB = 0
+                self.aniDHDB = animation.FuncAnimation(fDHDB, self.animateDHDB, interval=100)
+                i+=1
+        
+        else : 
+            self.boutonStop.configure(state=NORMAL)
+            i=0
+            while i<len(self.listeCourbeActive) :
+                
+                
+                if self.listeCourbeActive[i]==self.listeCompleteNom[0] :
+                    self.aniDH.event_source.start()
+                    i+=1
+                if self.listeCourbeActive[i]==self.listeCompleteNom[1] :
+                    self.aniDB.event_source.start()
+                    i+=1
+                if self.listeCourbeActive[i]==self.listeCompleteNom[2] :
+                    self.aniHB.event_source.start()
+                    i+=1
+                if self.listeCourbeActive[i]==self.listeCompleteNom[3] :
+                    self.aniVH.event_source.start()
+                    i+=1
+                if self.listeCourbeActive[i]==self.listeCompleteNom[4] :
+                    self.aniVB.event_source.start()
+                    i+=1
+                if self.listeCourbeActive[i]==self.listeCompleteNom[5] :
+                    self.aniFHFB.event_source.start()
+                    i+=1
+                if self.listeCourbeActive[i]==self.listeCompleteNom[6] :
+                    self.aniDHDB.event_source.start()
+                i+=1
+        print("oh")
+        
+            
+    def animateDH(self,i):                      #POSSIBLE BOUCLE A L INTERIEUR POUR DIMINUER LA FREQUENCE D AFFICHAGE
+        if self.comptErreurDH == 0:
+            try:
+                self.ajoutListeMesureAI(self.mesureDH,2)
+                self.tempsDH.append(i)
+                self.plotDH.clear()
+                self.plotDH.grid(True)
+                self.plotDH.set_xlabel('Temps(s)')
+                self.plotDH.set_ylabel('Deplacements (mm)')
+                self.plotDH.set_title('Deplacement du poincon haut en fonction du temps')
+                self.plotDH.set_xlim([i-10,i])
+                self.plotDH.plot(self.tempsDH,self.CoefTranformDeplHaut(self.mesureDH)[0])
+            except u12.U12Exception as errorCode :
+                typeErreurLabjack(errorCode)
+                self.comptErreurDH += 1
+            
+    def animateDB(self,i):                      #POSSIBLE BOUCLE A L INTERIEUR POUR DIMINUER LA FREQUENCE D AFFICHAGE
+        if self.comptErreurDB == 0:
+            try :
+                self.ajoutListeMesureAI(self.mesureDB,3)
+                self.tempsDB.append(i)
+                self.plotDB.clear()
+                self.plotDB.grid(True)
+                self.plotDB.set_xlabel('Temps(s)')
+                self.plotDB.set_ylabel('Deplacements (mm)')
+                self.plotDB.set_title('Deplacement du poincon bas en fonction du temps')
+                self.plotDB.set_xlim([i-10,i])
+                self.plotDB.plot(self.tempsDB,self.CoefTranformDeplBas(self.mesureDB)[0])
+            except u12.U12Exception as errorCode :
+                typeErreurLabjack(errorCode)
+                self.comptErreurDB += 1
+    
+    def animateHB(self,i):                      #POSSIBLE BOUCLE A L INTERIEUR POUR DIMINUER LA FREQUENCE D AFFICHAGE
+        if self.comptErreurHB == 0:
+            try :
+                self.ajoutListeMesureAI(self.mesureHBH,2)
+                self.ajoutListeMesureAI(self.mesureHBB,3)
+                self.tempsHB.append(i)
+                vide = []
+                self.y.append((self.mesureHBH[i]*self.CoefTranformDeplHaut(vide)[1]-self.CoefTranformDeplHaut(vide)[2])-(self.mesureHBB[i]*self.CoefTranformDeplBas(vide)[1]-self.CoefTranformDeplBas(vide)[2]))
+                self.plotHB.clear()
+                self.plotHB.grid(True)
+                self.plotHB.set_xlabel('Temps(s)')
+                self.plotHB.set_ylabel('Deplacements (mm)')
+                self.plotHB.set_title('Difference deplacement des poincons haut et bas en fonction du temps')
+                self.plotHB.set_xlim([i-10,i])
+                self.plotHB.plot(self.tempsHB,self.y)
+            except u12.U12Exception as errorCode :
+                typeErreurLabjack(errorCode)
+                self.comptErreurHB += 1
+    
+    def animateVH(self,i):                      #POSSIBLE BOUCLE A L INTERIEUR POUR DIMINUER LA FREQUENCE D AFFICHAGE
+        if self.comptErreurVH == 0:
+            try :
+                self.ajoutListeMesureAI(self.mesureVH,2)
+                self.tempsVH.append(i)
+                vide = []
+                if self.tempsVH[i] != 0:
+                    self.u.append((self.mesureVH[i]*self.CoefTranformDeplHaut(vide)[1]-self.CoefTranformDeplHaut(vide)[2])/(self.tempsVH[i]-self.tempsVH[i-1]))
+                else:
+                    self.u.append(0)
+                self.plotVH.clear()
+                self.plotVH.grid(True)
+                self.plotVH.set_xlabel('Temps(s)')
+                self.plotVH.set_ylabel('Vitesse (mm/s)')
+                self.plotVH.set_title('Vitesse deplacement du poincon haut en fonction du temps')
+                self.plotVH.set_xlim([i-10,i])
+                self.plotVH.plot(self.tempsVH,self.u)
+            except u12.U12Exception as errorCode :
+                typeErreurLabjack(errorCode)
+                self.comptErreurVH += 1
+                
+    def animateVB(self,i):                      #POSSIBLE BOUCLE A L INTERIEUR POUR DIMINUER LA FREQUENCE D AFFICHAGE
+        if self.comptErreurVB == 0:
+            try :
+                self.ajoutListeMesureAI(self.mesureVB,3)
+                self.tempsVB.append(i)
+                vide = []
+                if self.tempsVB[i] != 0:
+                    self.t.append((self.mesureVB[i]*self.CoefTranformDeplBas(vide)[1]-self.CoefTranformDeplBas(vide)[2])/(self.tempsVB[i]-self.tempsVB[i-1]))
+                else:
+                    self.t.append(0)
+                self.plotVB.clear()
+                self.plotVB.grid(True)
+                self.plotVB.set_xlabel('Temps(s)')
+                self.plotVB.set_ylabel('Vitesse d ejection (mm/s)')
+                self.plotVB.set_title('Vitesse d ejection en fonction du temps')
+                self.plotVB.set_xlim([i-10,i])
+                self.plotVB.plot(self.tempsVB,self.t)
+            except u12.U12Exception as errorCode :
+                typeErreurLabjack(errorCode)
+                self.comptErreurVB += 1
+    
+    def animateFHFB(self,i):                      #POSSIBLE BOUCLE A L INTERIEUR POUR DIMINUER LA FREQUENCE D AFFICHAGE
+        if self.comptErreurFHFB == 0:
+            try :
+                self.ajoutListeMesureAI(self.mesureFHFBH,0)
+                self.ajoutListeMesureAI(self.mesureFHFBB,1)
+                self.tempsFHFB.append(i)
+                self.plotFHFB.clear()
+                self.plotFHFB.grid(True)
+                self.plotFHFB.set_xlabel('Temps(s)')
+                self.plotFHFB.set_ylabel('Force (N)')
+                self.plotFHFB.set_title('Force des poincons haut et bas en fonction du temps')
+                self.plotFHFB.set_xlim([i-10,i])
+                self.plotFHFB.plot(self.tempsFHFB,self.CoefTranformForHaut(self.mesureFHFBH)[0])
+                self.plotFHFB.plot(self.tempsFHFB,self.CoefTranformForBas(self.mesureFHFBB)[0])
+                self.plotFHFB.legend(['Force haut','Force bas'],loc='upper right')
+            except u12.U12Exception as errorCode :
+                typeErreurLabjack(errorCode)
+                self.comptErreurFHFB += 1
+    
+    def animateDHDB(self,i):                      #POSSIBLE BOUCLE A L INTERIEUR POUR DIMINUER LA FREQUENCE D AFFICHAGE
+        if self.comptErreurDHDB == 0:
+            try :
+                self.ajoutListeMesureAI(self.mesureDHDBH,2)
+                self.ajoutListeMesureAI(self.mesureDHDBB,3)
+                self.tempsDHDB.append(i)
+                self.plotDHDB.clear()
+                self.plotDHDB.grid(True)
+                self.plotDHDB.set_xlabel('Temps(s)')
+                self.plotDHDB.set_ylabel('Deplacements (mm)')
+                self.plotDHDB.set_title('Deplacement des poincons haut et bas en fonction du temps')
+                self.plotDHDB.set_xlim([i-10,i])
+                self.plotDHDB.plot(self.tempsDHDB,self.CoefTranformDeplHaut(self.mesureDHDBH)[0],marker='o')
+                self.plotDHDB.plot(self.tempsDHDB,self.CoefTranformDeplBas(self.mesureDHDBB)[0],marker='o')
+                self.plotDHDB.legend(['Deplacecement haut','Deplacement bas'],loc='upper right')
+            except u12.U12Exception as errorCode :
+                typeErreurLabjack(errorCode)
+                self.comptErreurDHDB += 1
+            
+
+
+
+
+
+         
+
+### 6  Mesure via Labjack
+
+
+    def mesureAI(self,numPort) :
+        mesure = d.eAnalogIn(numPort)['voltage'] #Lit la liaison sur la carte LabJack
+        return mesure                            #Retourne la valeur en volt
+    
+    
+    def ajoutListeMesureAI(self,mesures,numPort): 
+        mesures.append(self.mesureAI(numPort))       #Ajout des signaux dans une liste
+
+    def mesureAIBurst(self,numPort,freq,ajoutTemps):#Lit liaison mÃ©thode Burst
+        d = u12.U12()
+        listeMesure = []
+        listeTemps = []
+        periode = 1.0/freq
+        mesure = d.aiBurst(1,[numPort],freq,freq)['voltages']
+        for i in range(4):
+            for j in range(4096):
+                if(j%4 == 0 and mesure[i][j] != 9999.0):
+                    listeMesure.append(mesure[i][j])
+        for j in range(len(listeMesure)):
+            listeTemps.append(periode*(j)+ajoutTemps)
+        return listeMesure,listeTemps
+    
+    def acquisitionTempsAburst(self,tps,numPort,freq):
+        tKM.showinfo("Information","Attendre "+str(tps)+" secondes avant l'affichage")
+        start = t.time()
+        end = t.time() + tps*2
+        mesure = []
+        temps = []
+        i = 0
+        k = 0
+        while i<=end:
+            x = self.mesureAIBurst(numPort,freq,k)
+            k = k+1
+            i = t.time()
+            mesure.extend(x[0])
+            temps.extend(x[1])
+        return temps,mesure
+        
+    def mesureAIBurstPlusPort(self,numPort,freq,ajoutTemps):#Lit liaison mÃ©thode Burst
+        listeMesure1 = []
+        listeMesure2 = []
+        listeMesure3 = []
+        listeMesure4 = []
+        listeTemps = []
+        num = len(numPort)
+        periode = 0.87/512
+        mesure = d.aiBurst(num,numPort,freq,512)['voltages']
+        for i in range(4):
+            for j in range(4096):
+                if(j%4 == 0 and mesure[i][j] != 9999.0):
+                    listeMesure1.append(mesure[i][j])
+                    listeMesure2.append(mesure[i][j+1])
+                    listeMesure3.append(mesure[i][j+2])
+                    listeMesure4.append(mesure[i][j+3])
+        for j in range(len(listeMesure1)):
+            listeTemps.append(periode*(j)+ajoutTemps)
+        return listeMesure1,listeMesure2,listeMesure3,listeMesure4,listeTemps
+    
+    def mesureAIBurstPlusPort1(self,numPort,freq,ajoutTemps):#Lit liaison mÃ©thode Burst
+        listeMesure1 = []
+        listeMesure2 = []
+        listeMesure3 = []
+        listeMesure4 = []
+        listeTemps = []
+        num = len(numPort)
+        periode = 0.87/512
+        mesure = d.aiBurst(num,numPort,freq,512)['voltages']
+        for i in range(4):
+            for j in range(4096):
+                if(j%4 == 0 and mesure[i][j] != 9999.0):
+                    listeMesure1.append(mesure[i][j])
+                    listeMesure2.append(mesure[i][j+1])
+                    listeMesure3.append(mesure[i][j+2])
+                    listeMesure4.append(mesure[i][j+3])
+        for j in range(len(listeMesure1)):
+            listeTemps.append(periode*(j)+ajoutTemps)
+        deplHaut = self.CoefTranformDeplHaut(listeMesure3)[0]
+        deplBas = self.CoefTranformDeplBas(listeMesure4)[0]
+        forHaut = self.CoefTranformForHaut(listeMesure1)[0]
+        forBas = self.CoefTranformForBas(listeMesure2)[0]
+        return forHaut,forBas,deplHaut,deplBas,listeTemps
+    
+    def acquisitionTempsAIburstPort(self,debut,fin,numPort,freq):
+        tps = fin - debut
+        tempsSup = tps #Prend en compte temps execution Aiburst pour 1000 ech/seconde
+        tkM.showinfo("Information","Attendre "+str(tempsSup)+" secondes avant l'affichage")
+        start = t.time()
+        end = start + tempsSup
+        mesure1 = []
+        mesure2 = []
+        mesure3 = []
+        mesure4 = []
+        tempsFirst = []
+        if start >= debut :
+            i = 0
+            k = 0
+            comptTrois = 0
+            while i<tps+1:
+                if comptTrois == 0 :
+                    y = self.mesureAIBurstPlusPort(numPort,freq,k)
+                    comptTrois = comptTrois +1 
+                    i = i + 1
+                    print(t.time()-start)
+                else : 
+                    x = self.mesureAIBurstPlusPort(numPort,freq,k)
+                    k = k+0.87
+                    i = i +1 
+                    mesure1.extend(x[0])
+                    mesure2.extend(x[1])
+                    mesure3.extend(x[2])
+                    mesure4.extend(x[3])
+                    tempsFirst.extend(x[4])
+                    print(t.time()-start)
+        deplHaut = self.CoefTranformDeplHaut(mesure3)[0]
+        deplBas = self.CoefTranformDeplBas(mesure4)[0]
+        forHaut = self.CoefTranformForHaut(mesure1)[0]
+        forBas = self.CoefTranformForBas(mesure2)[0]
+        print(start,end)
+        return tempsFirst,forHaut,forBas,deplHaut,deplBas
+        
+    def CoefTranformDeplHaut(self,deplHaut) :
+        os.chdir("C:\Users\BIOSTAT-Aplus\Documents\Data GI-View\Etalonnage") #MODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDIFIER
+        f = open('Etlonnage_Deplecement_Haut.txt','r')
+        fichier_entier = f.read()
+        files = fichier_entier.split("\n")
+        coef = files[len(files)-2]
+        coefFloat = float(coef)
+        deplHaut = [i*coefFloat for i in deplHaut]
+        coef1 = files[len(files)-1]
+        coef1float = float(coef1)
+        for i in range(len(deplHaut)):
+            deplHaut[i]=deplHaut[i]+float(coef1)
+        return deplHaut,coefFloat,coef1float
+    
+    def CoefTranformDeplBas(self,deplBas) :
+        os.chdir("C:\Users\BIOSTAT-Aplus\Documents\Data GI-View\Etalonnage") #MODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDIFIER
+        f = open('Etlonnage_Deplacement_Bas.txt','r')
+        fichier_entier = f.read()
+        files = fichier_entier.split("\n")
+        coef = files[len(files)-2]
+        coefFloat = float(coef)
+        deplBas = [i*coefFloat for i in deplBas]
+        coef2 = files[len(files)-1]
+        coef2float = float(coef2)
+        for i in range(len(deplBas)):
+            deplBas[i]=deplBas[i]-float(coef2)
+        return deplBas,coefFloat,coef2float
+    
+    def CoefTranformForBas(self,forBas) :
+        os.chdir("C:\Users\BIOSTAT-Aplus\Documents\Data GI-View\Etalonnage") #MODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDIFIER
+        f = open('Etlonnage_Force_Bas.txt','r')
+        fichier_entier = f.read()
+        files = fichier_entier.split("\n")
+        val = files[len(files)-1]
+        valFloat = float(val)
+        forBas = [i*valFloat for i in forBas]
+        return forBas,valFloat
+    
+    def CoefTranformForHaut(self,forHaut) :
+        coef = 1
+        forHaut = [i*coef for i in forHaut]
+        return forHaut,coef
+
+### Erreur utilisateur
+
+# Affichage erreur labjack
+
+def typeErreurLabjack(numError):
+    tkM.showerror("Erreur Carte acquisition",u12.getErrorString(int(str(numError))))
+
+#Capteur non connectÃ©, ne retourne pas de valeur
+
+def capteurConnect(num):
+    tkM.showerror("Error","Sensor number A"+str(num)+" is not connecting")
+
+def verificationValCapteur(x,y):
+    Compt = 0
+    for i in range(len(x)):
+        if y[i]>1.3 or y[i]<1.5:
+            compt = compt + 1
+    if compt == len(x):
+        return -1
+    else:
+        return 1
+
+
+### MAIN
+    
+    
+if __name__ == '__main__' :
+   
+    fenetre = Tk()
+    ecranLargeur=fenetre.winfo_screenwidth()
+    ecranHauteur=fenetre.winfo_screenheight()-80
+    print ecranLargeur
+    fenetre.geometry("{0}x{1}+0+0".format(ecranLargeur,ecranHauteur))
+    interface = Interface(fenetre)
+    interface.mainloop()
